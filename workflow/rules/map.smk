@@ -36,45 +36,45 @@ rule write_sample_list_file:
 
 rule map_plasmid:
     input:
-        guide_info = 'resources/gRNA_info/{lib}_gRNA_beret.csv',
+        guide_info = 'resources/gRNA_info/{lib}_gRNA_bean.csv',
         plasimd_R1 = "results/raw/{lib}/{lib}_{rep_bin}_R1.fastq.gz",
         plasmid_R2 = "results/raw/{lib}/{lib}_{rep_bin}_R2.fastq.gz",
     params:
         output_dir = 'results/mapped/{lib}'
     output:
-        out_h5ad = 'results/mapped/{lib}/beret_count_plasmid_{lib}.h5ad'
+        out_h5ad = 'results/mapped/{lib}/bean_count_plasmid_{lib}.h5ad'
     run:
         shell('mkdir -p {params.output_dir}')
         shell(
-            "beret-count --R1 results/raw/{wildcards.lib}/{wildcards.lib}_plasmid_R1.fastq --R2 results/raw/{wildcards.lib}_plasmid_R2.fastq -b A -f {input.guide_info} -o {params.output_dir} -a")
+            "bean-count --R1 results/raw/{wildcards.lib}/{wildcards.lib}_plasmid_R1.fastq --R2 results/raw/{wildcards.lib}_plasmid_R2.fastq -b A -f {input.guide_info} -o {params.output_dir} -a")
 
 rule map_samples:
     input:
-        guide_info = 'resources/gRNA_info/{lib}_gRNA_beret.csv',
+        guide_info = 'resources/gRNA_info/{lib}_gRNA_bean.csv',
         sample_list = 'results/raw/{lib}/sample_list.csv',# ?
         guide_start_seqs = "results/raw/{lib}/guide_start_seqs.txt",
-
     params:
         output_dir = 'results/mapped/{lib}/'
     output:
-        out_h5ad = 'results/mapped/{lib}/beret_count_{lib}.h5ad'
+        out_h5ad = 'results/mapped/{lib}/bean_count_{lib}.h5ad'
     run:
         shell('mkdir -p {params.output_dir}')
-        map_script = "beret-count-samples --input {input.sample_list} -b A -f {input.guide_info} -o {params.output_dir} -r -t 12 --name {wildcards.lib} --guide_start_seqs_file={input.guide_start_seqs}"
+        map_script = "bean-count-samples --input {input.sample_list} -b A -f {input.guide_info} -o {params.output_dir} -r -t 12 --name {wildcards.lib} --guide_start_seqs_file={input.guide_start_seqs}"
         if wildcards.lib == "LDLvar":
             map_script += " --match_target_pos"
         shell(map_script)
 
 rule map_all:
     input:
-        expand(['results/mapped/{lib}/beret_count_{lib}.h5ad'], lib=LIBS),
-        expand(['results/mapped/{lib}/beret_count_plasmid_{lib}.h5ad'], lib=LIBS)
+        expand(['results/mapped/{lib}/bean_count_{lib}.h5ad'], lib=LIBS),
+        expand(['results/mapped/{lib}/bean_count_plasmid_{lib}.h5ad'], lib=LIBS)
 
 rule combine_technical_replicate:
     input:
-        input_h5ad='results/mapped/{lib}/beret_count_{lib}.h5ad'
+        input_h5ad='results/mapped/{lib}/bean_count_{lib}.h5ad'
     output:
-        out_h5ad='results/mapped/{lib}/beret_count_{lib}_combined.h5ad',
+        out_h5ad='results/mapped/{lib}/bean_count_{lib}_combined.h5ad',
         #techrep_plots=expand(['results/mapped/{lib}/figs/lfc_corr_{rep}.pdf'], rep=REPS[{lib}])
     run:
         shell("python scripts/map_collect/combine_technical_replicates.py {wildcards.lib}")
+
