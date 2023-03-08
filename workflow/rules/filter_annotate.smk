@@ -7,13 +7,12 @@ rule run_qc_notebooks:
     params:
         html_prefix="reports/qc_report_{lib}"
     run:
-        #shell("papermill notebooks/sample_quality_report.ipynb -p bdata_path {input.input_h5ad} -p out_bdata_path {output.out_h5ad} {output.report}")
         shell("bean-qc {input.input_h5ad} -o {output.out_h5ad} -r {params.html_prefix}")
 
 rule filter_annotate_cds_alleles:
     input:
         input_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_masked.h5ad',
-        plasmid_h5ad='results/mapped/LDLRCDS/bean_count_plasmid_LDLRCDS.h5ad'
+        plasmid_h5ad='results/mapped/LDLRCDS/bean_count_LDLRCDS_plasmid.h5ad'
     params:
         output_prefix='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered'
     output:
@@ -21,13 +20,26 @@ rule filter_annotate_cds_alleles:
         output_filter_stats='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered.filtered_allele_stats.pdf',
         output_filter_log='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered.filter_log.txt',
     run:
-        shell("bean-filter {input.input_h5ad} {params.output_prefix} -p {input.plasmid_h5ad} -s 2 -s 7 -w -b -t -ap 0.05 ")
+        shell("bean-filter {input.input_h5ad} {params.output_prefix} -p {input.plasmid_h5ad} -s 2 -e 7 -w -b -t -ap 0.05 ")
 
-rule make_ldlvar_path:
+rule make_fake_annotated_var:
     input:
         input_h5ad='results/filtered_annotated/LDLvar/bean_count_LDLvar_masked.h5ad'
     output:
-        output_h5ad='results/filtered_annotated/LDLvar/bean_count_LDLvar_annotated.h5ad'
+        output_h5ad='results/filtered_annotated/LDLvar/bean_count_LDLvar_alleleFiltered.h5ad',
     run:
-        shell("ln -s {input.input_h5ad} {output.output_h5ad}")
+        shell("ln -s $(pwd -P)/{input.input_h5ad} {output.output_h5ad}")
+
+rule editing_pattern_analysis:
+    input:
+        var_h5ad='results/filtered_annotated/LDLvar/bean_count_LDLvar_masked.h5ad',
+        cds_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_masked.h5ad',
+        notebook="notebooks/Fig1/1b_position.ipynb"
+    output:
+        pam_fig='notebooks/Fig1b/1b_pam_varcds_combined.pdf',
+        pos_by_pam_ctxt_fig = 'notebooks/Fig1b/1b_pos_pam_and_context.pdf',
+        pos_eff_behive_fig="notebooks/Fig1b/1b_pos_eff_behive_LDLRCDS.pdf",
+        pos_eff_behive_normed_fig="notebooks/Fig1b/1b_pos_eff_behive_LDLRCDS_normed.pdf"
+    run:
+        shell("jupyter nbconvert --execute {input.notebook}")
         

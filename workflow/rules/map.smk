@@ -37,16 +37,16 @@ rule write_sample_list_file:
 rule map_plasmid:
     input:
         guide_info = 'resources/gRNA_info/{lib}_gRNA_bean.csv',
-        plasimd_R1 = "results/raw/{lib}/{lib}_{rep_bin}_R1.fastq.gz",
-        plasmid_R2 = "results/raw/{lib}/{lib}_{rep_bin}_R2.fastq.gz",
+        plasmid_R1 = "results/raw/{lib}/{lib}_plasmid_R1.fastq.gz",
+        plasmid_R2 = "results/raw/{lib}/{lib}_plasmid_R2.fastq.gz",
     params:
         output_dir = 'results/mapped/{lib}'
     output:
-        out_h5ad = 'results/mapped/{lib}/bean_count_plasmid_{lib}.h5ad'
+        out_h5ad = 'results/mapped/{lib}/bean_count_{lib}_plasmid.h5ad'
     run:
         shell('mkdir -p {params.output_dir}')
         shell(
-            "bean-count --R1 results/raw/{wildcards.lib}/{wildcards.lib}_plasmid_R1.fastq --R2 results/raw/{wildcards.lib}_plasmid_R2.fastq -b A -f {input.guide_info} -o {params.output_dir} -a")
+            "bean-count --R1 {input.plasmid_R1} --R2 {input.plasmid_R2} -b A -f {input.guide_info} -o {params.output_dir} -r --guide-start-seq=GGAAAGGACGAAACACCG")
 
 rule map_samples:
     input:
@@ -59,7 +59,7 @@ rule map_samples:
         out_h5ad = 'results/mapped/{lib}/bean_count_{lib}.h5ad'
     run:
         shell('mkdir -p {params.output_dir}')
-        map_script = "bean-count-samples --input {input.sample_list} -b A -f {input.guide_info} -o {params.output_dir} -r -t 12 --name {wildcards.lib} --guide_start_seqs_file={input.guide_start_seqs}"
+        map_script = "bean-count-samples --input {input.sample_list} -b A -f {input.guide_info} -o {params.output_dir} -r -t 12 --name {wildcards.lib} --guide-start-seqs-file={input.guide_start_seqs}"
         if wildcards.lib == "LDLvar":
             map_script += " --match_target_pos"
         shell(map_script)
