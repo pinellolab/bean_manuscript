@@ -20,15 +20,15 @@ rule filter_annotate_cds_alleles:
         output_filter_stats='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered.filtered_allele_stats.pdf',
         output_filter_log='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered.filter_log.txt',
     run:
-        shell("bean-filter {input.input_h5ad} {params.output_prefix} -p {input.plasmid_h5ad} -s 2 -e 7 -w -b -t -ap 0.05 ")
+        shell("bean-filter {input.input_h5ad} -o {params.output_prefix} -p {input.plasmid_h5ad} -s 2 -e 7 -w -b -t -ap 0.05 ")
 
-rule make_fake_annotated_var:
+rule annotate_var:
     input:
         input_h5ad='results/filtered_annotated/LDLvar/bean_count_LDLvar_masked.h5ad'
     output:
         output_h5ad='results/filtered_annotated/LDLvar/bean_count_LDLvar_alleleFiltered.h5ad',
     run:
-        shell("ln -s $(pwd -P)/{input.input_h5ad} {output.output_h5ad}")
+        shell("python scripts/run_models/add_quantiles.py {input.input_h5ad} {output.output_h5ad}")
 
 rule editing_pattern_analysis:
     input:
