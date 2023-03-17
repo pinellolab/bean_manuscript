@@ -78,3 +78,27 @@ rule combine_technical_replicate:
     run:
         shell("python scripts/map_collect/combine_technical_replicates.py {wildcards.lib}")
 
+rule map_minitiling_guide_reporter:
+    input:
+        guide_info=expand(["results/raw/minitiling/guide_reporter/${lib}_gRNA.csv"], lib=["SubA", "SubB", "SubC", "SubD", "SubC_Q5U", "SubD_Q5U"]),
+        raw_fastq=expand(["results/raw/minitiling/guide_reporter/fastq/LDLREndo_{lib}_{rep}_Reporter_gDNA_{read}.fastq.gz"], lib=["SubA_Q5", "SubB_Q5", "SubC_Q5", "SubC_Q5U", "SubD_Q5", "SubD_Q5U"], rep=['rep1', 'rep2', 'rep3'], read=["R1", "R2"]),
+        sample_list_files=expand([
+            "results/raw/minitiling/guide_reporter/{lib}_sample_list.csv"
+        ], lib=["SubA", "SubB", "SubC", "SubD"])
+    output:
+        out_h5ad=expand(["results/mapped/minitiling/endo/{cond}/bean_count_{cond}.h5ad"], cond=["SubA", "SubB", "SubC", "SubD"])
+    run:
+        shell("sh scripts/map_collect/minitiling_guide_reporter.sh")
+
+rule map_minitiling_endo:
+    input:
+        expand(['results/raw/minitiling/endo/fastq/HepG2_LDLREndo_{cond}_{rep}'], cond=["SubA_Q5", "SubB_Q5", "SubC_Q5", "SubC_Q5U", "SubD_Q5", "SubD_Q5U"], rep=["rep1", "rep2", "rep3", "WT_Ctrl"])
+    output:
+        expand(['results/mapped/minitiling/endo/CRISPResso_on_HepG2_LDLREndo_{cond}_{rep}'], cond=["SubA_Q5", "SubB_Q5", "SubC_Q5", "SubC_Q5U", "SubD_Q5", "SubD_Q5U"], rep=["rep1", "rep2", "rep3", "WT_Ctrl"])
+    run:
+        shell(
+            "sh scripts/map_collect/minitiling_endo_crispresso.sh"
+        )
+        shell(
+            "python scripts/map_collect/convert_crispresso_to_screen.py results/mapped/minitiling/endo/"
+        )

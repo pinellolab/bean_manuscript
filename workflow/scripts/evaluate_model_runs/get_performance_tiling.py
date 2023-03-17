@@ -1,0 +1,205 @@
+"""Compare performances of multiple models for a screen object."""
+import os
+import argparse
+from functools import partial
+import numpy as np
+import pandas as pd
+import evaluate as ae
+
+model_ids = ["Normal", "MixtureNormal", "MixtureNormal+Acc"]
+mageck_mle_disp_modes = ["sort", "sort_var"]
+mageck_mle_pi_modes = ["", "EM", "EMf"]
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Get performance metric and plot.")
+    parser.add_argument(
+        "screen_name",
+        type=str,
+    )
+    parser.add_argument(
+        "--guide-info-path",
+        type=str,
+        default="resources/gRNA_info/LDLvar_gRNA_bean_accessibility.csv",
+    )
+    parser.add_argument("--control", type=str, default="negctrl")
+    return parser.parse_args()
+
+
+def get_average_metric(df, pos_idx, neg_idx):
+    print(df)
+    return (df.iloc[:, 0] * len(pos_idx) + df.iloc[:, 1] * len(neg_idx)) / (
+        len(pos_idx) + len(neg_idx)
+    )
+
+
+def get_mean_metric(df):
+    splicing = df.iloc[:, :2].mean(axis=1)
+    strong = df.iloc[:, 2:].mean(axis=1)
+    return pd.DataFrame({"splicing": splicing, "mylip_ldlr": strong})
+
+
+def get_bean_results(result_path_format):
+
+    res_tbls = []
+    for model_id in model_ids:
+        tbl = pd.read_csv(result_path_format.format(model_id))
+        tbl = tbl.add_suffix(f"_{model_id}")
+        res_tbls.append(tbl.reset_index())
+    return pd.concat(res_tbls, axis=1)
+
+
+def get_mageck_results(mageck_prefix):
+    def read_and_add_suffix(disp_mode, pi_mode):
+        res_path = f"{mageck_prefix}/{pi_mode}/{disp_mode}.gene_summary.txt"
+        tbl = pd.read_table(res_path, sep="\t")
+        tbl = tbl.add_suffix(f"_{disp_mode}_{pi_mode}")
+        return tbl
+
+    tbls = [
+        read_and_add_suffix(disp_mode, pi_mode)
+        for disp_mode in mageck_mle_disp_modes
+        for pi_mode in mageck_mle_pi_modes
+    ]
+    labels = [
+        f"MAGeCK-MLE_{disp_mode}_{pi_mode}"
+        for disp_mode in mageck_mle_disp_modes
+        for pi_mode in mageck_mle_pi_modes
+    ]
+    return pd.concat(tbls, axis=1), labels
+
+
+def get_metrics_bidirectional(
+    metric_fn,
+    res_tbl,
+    z_cols,
+    fdr_inc_cols,
+    fdr_dec_cols,
+    labels,
+    pos_idx,
+    neg_idx,
+    ctrl_idx,
+    control_label="splicing",
+):
+    return metric_fn(
+        list_zs=[res_tbl[c] for c in z_cols],
+        list_fdrs_inc=[res_tbl[c] for c in fdr_inc_cols],
+        list_fdrs_dec=[res_tbl[c] for c in fdr_dec_cols],
+        z_labels=labels,
+        pos_inc_idx=pos_idx,
+        pos_dec_idx=neg_idx,
+        neg_ctrl_idx=ctrl_idx,
+        prefix=control_label,
+        # filter_sign=True
+    ).round(3)
+
+
+def get_metrics(
+    metric_fn,
+    res_tbl,
+    z_cols,
+    fdr_cols,
+    labels,
+    pos_idx,
+    ctrl_idx,
+    control_label="splicing",
+):
+    return metric_fn(
+        list_zs=[res_tbl[c] for c in z_cols],
+        list_fdrs=[res_tbl[c] for c in fdr_cols],
+        z_labels=labels,
+        pos_idx=pos_idx,
+        ctrl_idx=ctrl_idx,
+        prefix=control_label,
+        # filter_sign=True
+    ).round(3)
+
+
+def get_auroc_auprc(
+    metric_fn,
+    labels,
+    res_tbl,
+    z_cols,
+    pos_idx,
+    neg_idx,
+    ctrl_idx,
+    control_label="splicing",
+    **kwargs,
+):
+    return metric_fn(
+        [res_tbl[c] for c in z_cols], labels, pos_idx, neg_idx, ctrl_idx, control_label
+    ).round(3)
+
+
+def main():
+    args = parse_args()
+    output_path = f"results/model_runs/{args.screen_name}"
+    os.makedirs(output_path, exist_ok=True)
+    bean_result_path_format = f"results/model_runs/bean/bean_run_result.{args.screen_name}/bean_element_result.{{}}.csv"
+    guide_info_path = args.guide_info_path
+    mageck_prefix = f"results/model_runs/mageck/{args.screen_name}/"
+
+    guide_info = pd.read_csv(guide_info_path)
+    target_info = (
+        guide_info[["target", "region", "group"]]
+        .drop_duplicates()
+        .set_index("target", drop=True)
+    )
+
+    pos_idx = np.where(target_info.group == "splicing")
+    if args.control == "negctrl":
+        ctrl_idx = np.where(target_info.group == "negctrl")
+    elif args.control == "splicing":
+        ctrl_idx = np.where(target_info.group == "syn")
+
+    def get_cols(bean_pattern, mageck_pattern):
+        return [bean_pattern.format(m) for m in model_ids] + [
+            mageck_pattern.format(disp_mode, pi_mode)
+            for disp_mode in mageck_mle_disp_modes
+            for pi_mode in mageck_mle_pi_modes
+        ]
+
+    bean_results = get_bean_results(bean_result_path_format)
+    mageck_results, mageck_labels = get_mageck_results(mageck_prefix)
+    all_results = pd.concat([bean_results, mageck_results], axis=1)
+    all_results.to_csv(f"results/model_runs/{args.screen_name}/all_scores.csv")
+
+    kwargs = {
+        "res_tbl": pd.concat([bean_results, mageck_results], axis=1),
+        "z_cols": get_cols("mu_z_{}", "sort_num|z_{}_{}"),
+        "fdr_cols": get_cols("fdr_inc_{}", "sort_num|fdr_{}_{}"),
+        "labels": model_ids + mageck_labels,
+        "pos_idx": pos_idx,
+        "ctrl_idx": ctrl_idx,
+    }
+
+    precisions = get_metrics(ae.get_precision, **kwargs)
+    recalls = get_metrics(ae.get_recall, **kwargs)
+    fdr_f1s = get_metrics(partial(ae.get_fdr_f, beta=1), **kwargs)
+    fdr_f01s = get_metrics(partial(ae.get_fdr_f, beta=0.1), **kwargs)
+    aurocs = get_auroc_auprc(ae.get_auroc, **kwargs)
+    auprcs = get_auroc_auprc(ae.get_auprc, **kwargs)
+
+    perf_dict = {
+        "Precision": precisions,
+        "Recall": recalls,
+        "F1": fdr_f1s,
+        "F0.1": fdr_f01s,
+        "AUROC": aurocs,
+        "AUPRC": auprcs,
+    }
+
+    perf_df = pd.concat(perf_dict.values(), axis=1, keys=perf_dict.keys())
+
+    writer = pd.ExcelWriter(
+        f"results/model_runs/{args.screen_name}/{args.control}.metrics.xlsx",
+        engine="xlsxwriter",
+    )
+    perf_df.style.set_properties(**{"width": "px"}).background_gradient().to_excel(
+        writer, sheet_name="metrics"
+    )
+    writer.save()
+
+
+if __name__ == "__main__":
+    main()

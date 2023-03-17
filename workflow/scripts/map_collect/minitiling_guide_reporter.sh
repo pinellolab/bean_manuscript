@@ -1,0 +1,1 @@
+for cond in SubA SubB SubC SubD; do bean-count-samples --input results/raw/${cond}_sample_list.csv -b A -f results/raw/minitiling/guide_reporter/${cond}_gRNA.csv -o results/mapped/minitiling/endo/${cond} -a -t 12 --name ${cond} --guide_start_seq= & done 
