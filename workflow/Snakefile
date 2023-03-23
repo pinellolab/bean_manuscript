@@ -1,0 +1,7 @@
+from snakemake.utils import min_version
+##### load rules #####
+
+
+include: "rules/map.smk"
+include: "rules/filter_annotate.smk"
+include: "rules/run_models.smk"
