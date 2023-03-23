@@ -47,7 +47,7 @@ rule annotate_tiling:
     output:
         output_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_annotated.h5ad',
     run:
-        shell("python scripts/filter_annotate/assign_guide_to_outcome.py both {input.input_h5ad} {output.output_h5ad} -s {input.splice_sites} -p {input.behive_pred} --write-bdata")
+        shell("python scripts/filter_annotate/assign_guide_to_outcome.py both {input.input_h5ad} {output.output_h5ad} -s {input.splice_sites} -p {input.behive_pred} --write-bdata --control-guide-tag ABE_CONTROL")
         shell("python scripts/run_models/add_quantiles.py {output.output_h5ad} {output.output_h5ad}")
 
 rule editing_pattern_analysis:

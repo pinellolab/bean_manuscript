@@ -78,6 +78,26 @@ if [ ! -f $mageck_path/EMf/sort_var.gene_summary.txt ]; then
     pids+=($!)
 fi
 
+## MAGeCK RRA
+bot_samples=$(awk -F'\t' '{if ($3=='0') {print $1}}' $dm_topbot | paste -sd "," -)
+top_samples=$(awk -F'\t' '{if ($3=='1') {print $1}}' $dm_topbot | paste -sd "," -)
+if [ $rerun ] || [ ! -f "$mageck_path/rra_top.gene_summary.txt" ]; then
+    echo "Running MAGeCK RRA..."
+    mageck test -k $mageck_outfile -t $top_samples -c $bot_samples --paired -n $mageck_path/rra_top 
+    pids+=($!)
+fi
+if [ $rerun ] || [ ! -f "$mageck_path/rra_bot.gene_summary.txt" ]; then
+    echo "Running MAGeCK RRA..."
+    mageck test -k $mageck_outfile -t $bot_samples -c $top_samples --paired -n $mageck_path/rra_bot 
+    pids+=($!)
+fi
+
+## CRISPhieRmix
+
+## ACE
+
+## BAGEL
+
 for pid in ${pids[*]}; do
     wait $pid
 done

@@ -24,10 +24,10 @@ def run_models(bdata_paths):
             ["sh", "scripts/run_models/run_bean_tiling.sh", bdata_path]
         )
         procs.append(p)
-        p = subprocess.Popen(
-            ["sh", "scripts/run_models/run_mageck_tiling.sh", bdata_path]
-        )
-        procs.append(p)
+        # p = subprocess.Popen(
+        #     ["sh", "scripts/run_models/run_mageck_tiling.sh", bdata_path]
+        # )
+        # procs.append(p)
     for p in procs:
         p.wait()
 
@@ -87,7 +87,7 @@ def main():
     for p in procs:
         p.wait()
 
-    run_models(sub_bdata_paths)
+    # run_models(sub_bdata_paths)
     evaluate_model_runs(sub_bdata_prefixes)
 
 

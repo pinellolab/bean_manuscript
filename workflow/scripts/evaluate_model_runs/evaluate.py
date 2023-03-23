@@ -1,5 +1,4 @@
-from typing import Iterable
-
+from typing import Iterable, Sequence, Tuple, Literal
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -597,3 +596,76 @@ def plot_prcs_OvR(
     axes[1].set_xlabel("Recall")
     axes[1].set_ylabel("Precision")
     return (auroc_inc, auroc_dec)
+
+
+def format_aa_str(aa_str):
+    """
+    R123A to 123:R>A
+    """
+    ref = aa_str[0]
+    pos = aa_str[1:-1]
+    alt = aa_str[-1]
+    return "A{}:{}>{}".format(pos, ref, alt)
+
+
+def get_dms_df(
+    edit_info,
+    edit_str_column: str = "edit",
+    format_edit: bool = True,
+    join_how: Literal["left", "outer"] = "left",
+    filter_possible_base_transitions: Sequence[Tuple[str, str]] = (
+        ("A", "G"),
+        ("T", "C"),
+    ),
+    variant_table_path: str = "resources/LDLR/LDLR_DMS_dbNSFP_050522.xlsx",
+) -> pd.DataFrame:
+    """
+    Return edit_info dataFrame merged with deep mutational scanning data
+    Args:
+        edit_info (pd.DataFrame): edit_info dataFrame
+        edit_str_column (str): column name of edit strings
+        format_edit (bool): whether to format edit strings
+        filter_possible_base_transitions (Sequence[Tuple[str, str]]): Possible base
+            transitions that will be selected from initial variant table
+        variant_table_path: Path of variant information table (Excel file)
+    """
+    dms_tbl = pd.read_excel(variant_table_path)
+    if filter_possible_base_transitions is not None:
+        dms_tbl["base_transition"] = list(zip(dms_tbl.ref, dms_tbl.alt))
+        dms_tbl = dms_tbl.loc[
+            dms_tbl.base_transition.isin(list(filter_possible_base_transitions)), :
+        ]
+    if format_edit:
+        dms_tbl["edit_str"] = dms_tbl.aa_str.map(format_aa_str)
+    else:
+        dms_tbl["edit_str"] = dms_tbl.aa_str
+    dms_tbl = dms_tbl.rename(columns={"phyloP100way_vertebrate": "phylo100"})
+    edit_info_dms = edit_info.merge(
+        dms_tbl[
+            [
+                "edit_str",
+                "cs_simple",
+                "norm_raw_score",
+                "final_score",
+                "sub_score",
+                "pos_score",
+                "clinvar_clnsig",
+                "phylo100",
+            ]
+        ].drop_duplicates(),
+        left_on=edit_str_column,
+        right_on="edit_str",
+        how=join_how,
+    )
+
+    edit_info_dms["clinvar_annot_3"] = edit_info_dms["cs_simple"]
+    edit_info_dms.loc[
+        edit_info_dms.clinvar_clnsig == "Pathogenic", "clinvar_annot_3"
+    ] = "Pathogenic"
+    edit_info_dms.loc[:, "clinvar_annot_2"] = edit_info_dms.cs_simple.replace(
+        {"p": "Pathogenic/Likely_Pathogenic", "b": "Benign/Likely_Benign"}
+    )
+    edit_info_dms.loc[:, "clinvar_annot_3"] = edit_info_dms.clinvar_annot_3.replace(
+        {"p": "Pathogenic/Likely_Pathogenic", "b": "Benign/Likely_Benign"}
+    )
+    return edit_info_dms

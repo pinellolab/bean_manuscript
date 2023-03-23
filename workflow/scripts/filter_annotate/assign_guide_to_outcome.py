@@ -13,15 +13,27 @@ def edit_range(seq, start=6 + 3, end=6 + 7, ref_base="A", alt_base="G"):
     return seq[:start] + seq[start:end].replace(ref_base, alt_base) + seq[end:]
 
 
-def get_allele(seq, offset, edit_start=6 + 3, edit_end=6 + 7, strand=1):
+def get_allele(
+    seq,
+    offset,
+    edit_start=6 + 3,
+    edit_end=6 + 7,
+    strand=1,
+    base_edited_from="A",
+    base_edited_to="G",
+):
     allele = be.Allele()
     for i in range(edit_start, edit_end):
-        if seq[i] == "A":
-            allele.add(be.Edit(i, "A", "G", offset=offset, strand=strand))
+        if seq[i] == base_edited_from:
+            allele.add(
+                be.Edit(
+                    i, base_edited_from, base_edited_to, offset=offset, strand=strand
+                )
+            )
     return allele
 
 
-def _get_allele(row):
+def _get_allele(row, base_edited_from="A", base_edited_to="G"):
     if row.strand == "neg":
         strand = -1
         offset = row.start_pos + 32 - 6 - 1
@@ -34,6 +46,8 @@ def _get_allele(row):
         edit_start=32 - 6 - row.guide_len + 3,
         edit_end=32 - 6 - row.guide_len + 7,
         strand=strand,
+        base_edited_from=base_edited_from,
+        base_edited_to=base_edited_to,
     )
 
 
@@ -168,13 +182,18 @@ def get_most_severe_edit(row, splice_positions: List):
 
 
 def get_allEdited_outcome(
-    bdata: be.ReporterScreen, splice_sites: pd.DataFrame
+    bdata: be.ReporterScreen, splice_sites: pd.DataFrame, control_guide_tag=None
 ) -> pd.DataFrame:
     # http://localhost:20081/notebooks/PROJECTS/2021_08_ANBE/mageck_results/LDLRCDS_fullsort/allEdited/all_pos_edited.ipynb
     bdata.guides.loc[
         bdata.guides.Region.isin(["ABE control", "CBE control"]), "start_pos"
     ] = 0
-    bdata.guides["allele"] = bdata.guides.apply(_get_allele, axis=1)
+    bdata.guides["allele"] = bdata.guides.apply(
+        _get_allele,
+        base_edited_from=bdata.base_edited_from,
+        base_edited_to=bdata.base_edited_to,
+        axis=1,
+    )
     aa_allele = pd.DataFrame({"aa_allele": bdata.guides.allele.map(translate_lenient)})
     aa_allele["coding"] = aa_allele.aa_allele.map(
         lambda a: be.AminoAcidAllele() if isinstance(a, str) else a.aa_allele
@@ -220,8 +239,14 @@ def get_allEdited_outcome(
     bdata.guides = bdata.guides.rename(
         columns={"most_severe_edit": "target_allEdited", "group": "group_allEdited"}
     )
-
     return bdata.guides
+
+
+def _annotate_target_with_uid(row, control_guide_tag, target_col):
+    if control_guide_tag in row.index and row[target_col] != "":
+        return f"{row.index}!{row[target_col]}"
+    else:
+        return row[target_col]
 
 
 def main():
@@ -256,6 +281,12 @@ def main():
     parser.add_argument(
         "--pred_path", "-p", type=str, help="Path of predicted editing outcome"
     )  # TODO: needs to be simplified to plain table instead of excel
+    parser.add_argument(
+        "--control-guide-tag",
+        type=str,
+        default=None,
+        help="If provided, edits are assigned of unique id.",
+    )  # TODO: needs to be simplified to plain table instead of excel
     args = parser.parse_args()
     validate_args(args)
 
@@ -263,10 +294,24 @@ def main():
     if args.mode == "all" or args.mode == "both":
         splice_sites = pd.read_csv(args.splice_site_csv)
         guide_info = get_allEdited_outcome(bdata, splice_sites)
+        if args.control_guide_tag is not None:
+            guide_info.target_allEdited = guide_info.apply(
+                lambda row: _annotate_target_with_uid(
+                    row, args.control_guide_tag, "target_allEdited"
+                ),
+                axis=1,
+            ).astype(str)
         if args.write_bdata:
             bdata.guides = guide_info
     if args.mode == "pred" or args.mode == "both":
         guide_info = get_behive_outcome(args.pred_path, bdata.guides)
+        if args.control_guide_tag is not None:
+            guide_info.target_behive = guide_info.apply(
+                lambda row: _annotate_target_with_uid(
+                    row, args.control_guide_tag, "target_behive"
+                ),
+                axis=1,
+            ).astype(str)
         if args.write_bdata:
             if "name" in guide_info.columns:
                 guide_info = guide_info.set_index("name")

@@ -83,7 +83,7 @@ def main():
     for p in procs:
         p.wait()
 
-    # run_models(sub_bdata_paths)
+    run_models(sub_bdata_paths)
     evaluate_model_runs(sub_bdata_prefixes)
 
 
