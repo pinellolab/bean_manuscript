@@ -21,7 +21,10 @@ Scripts for plots used in manuscript. Follows (WorkflowHub standards)[https://sn
 |   │   ├── map_collect.yaml
 |   │   └── analysis.yaml
 │   ├── scripts
-|   │   └── ...
+|   │   ├── map_collect
+|   │   ├── filter_annotate
+|   │   ├── run_models
+|   │   └── evaluate_model_runs
 │   ├── notebooks
 │   ├── report
 |   │   ├── plot1.rst
