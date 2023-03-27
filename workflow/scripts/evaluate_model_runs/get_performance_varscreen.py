@@ -9,6 +9,7 @@ import evaluate as ae
 model_ids = ["Normal", "MixtureNormal", "MixtureNormal+Acc"]
 mageck_mle_disp_modes = ["sort", "sort_var"]
 mageck_mle_pi_modes = ["", "EM", "EMf"]
+mageck_rra_modes = ["top", "bot"]
 
 
 def parse_args():
@@ -40,24 +41,32 @@ def get_mean_metric(df):
 
 
 def get_bean_results(result_path_format):
-
+    gene_order = None
     res_tbls = []
     for model_id in model_ids:
         tbl = pd.read_csv(result_path_format.format(model_id))
+        if gene_order is None:
+            gene_order = tbl["target"]
         tbl = tbl.add_suffix(f"_{model_id}")
         res_tbls.append(tbl.reset_index())
-    return pd.concat(res_tbls, axis=1)
+    return pd.concat(res_tbls, axis=1), gene_order
 
 
-def get_mageck_results(mageck_prefix):
-    def read_and_add_suffix(disp_mode, pi_mode):
+def get_mageck_results(mageck_prefix, gene_order):
+    def read_and_add_suffix(disp_mode, pi_mode, gene_order):
         res_path = f"{mageck_prefix}/{pi_mode}/{disp_mode}.gene_summary.txt"
-        tbl = pd.read_table(res_path, sep="\t")
+        tbl = pd.read_table(res_path, sep="\t", index_col=0).reindex(gene_order)
         tbl = tbl.add_suffix(f"_{disp_mode}_{pi_mode}")
         return tbl
 
+    def read_and_add_suffix_rra(mode, gene_order):
+        res_path = f"{mageck_prefix}/{mode}.gene_summary.txt"
+        tbl = pd.read_table(res_path, sep="\t", index_col=0).reindex(gene_order)
+        tbl = tbl.add_suffix(f"_rra_{mode}")
+        return tbl
+
     tbls = [
-        read_and_add_suffix(disp_mode, pi_mode)
+        read_and_add_suffix(disp_mode, pi_mode, gene_order)
         for disp_mode in mageck_mle_disp_modes
         for pi_mode in mageck_mle_pi_modes
     ]
@@ -66,6 +75,10 @@ def get_mageck_results(mageck_prefix):
         for disp_mode in mageck_mle_disp_modes
         for pi_mode in mageck_mle_pi_modes
     ]
+
+    # RRA
+    tbls += [read_and_add_suffix_rra(mode, gene_order) for mode in mageck_rra_modes]
+    labels += [f"MAGeCK-RRA_{mode}" for mode in mageck_rra_modes]
     return pd.concat(tbls, axis=1), labels
 
 
@@ -165,8 +178,8 @@ def main():
             for pi_mode in mageck_mle_pi_modes
         ]
 
-    bean_results = get_bean_results(bean_result_path_format)
-    mageck_results, mageck_labels = get_mageck_results(mageck_prefix)
+    bean_results, gene_order = get_bean_results(bean_result_path_format)
+    mageck_results, mageck_labels = get_mageck_results(mageck_prefix, gene_order)
     all_results = pd.concat([bean_results, mageck_results], axis=1)
     all_results.to_csv(f"results/model_runs/{args.screen_name}/all_scores.csv")
 

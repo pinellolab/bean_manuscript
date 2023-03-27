@@ -8,7 +8,11 @@ import bean as be
 
 def main():
     lib = sys.argv[1]
-    assert lib in ["LDLvar", "LDLRCDS"]
+    if lib not in ["LDLvar", "LDLRCDS"]:
+        os.system(
+            f"ln -s bean_count_{lib}.h5ad results/mapped/{lib}/bean_count_{lib}_combined.h5ad"
+        )
+        exit(0)
     bdata_path = f"results/mapped/{lib}/bean_count_{lib}.h5ad"
     bdata = be.read_h5ad(bdata_path)
 

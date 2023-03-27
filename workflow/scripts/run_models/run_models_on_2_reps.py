@@ -20,9 +20,9 @@ def get_string_combination(rep_list):
 def run_models(bdata_paths):
     procs = []
     for bdata_path in bdata_paths:
-        p = subprocess.Popen(["sh", "scripts/run_models/run_bean.sh", bdata_path])
-        procs.append(p)
-        p = subprocess.Popen(["sh", "scripts/run_models/run_mageck.sh", bdata_path])
+        # p = subprocess.Popen(["sh", "scripts/run_models/run_bean_var.sh", bdata_path])
+        # procs.append(p)
+        p = subprocess.Popen(["sh", "scripts/run_models/run_mageck_var.sh", bdata_path])
         procs.append(p)
     for p in procs:
         p.wait()

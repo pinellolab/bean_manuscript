@@ -21,62 +21,62 @@ if [ ! -f $mageck_outfile ] || [ ! -f $dm_topbot ] || [ ! -f $dm_sort ] || [ ! -
     python scripts/run_models/make_mageck_input.py $bdata_path -p $mageck_path -m $mask_col --use_bcmatch
 fi
 
-## MAGeCK MLE
-echo "Submitting MAGeCK runs..."
-if [ ! -f $mageck_path/topbot.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_topbot -n $mageck_path/topbot --threads=1 &
-    pids+=($!)
-fi
-if [ ! -f $mageck_path/sort.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_sort -n $mageck_path/sort --threads=1 &
-    pids+=($!)
-fi
-if [ ! -f $mageck_path/topbot_var.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_topbot --genes-varmodeling 1000 -n $mageck_path/topbot_var --threads=1 &
-    pids+=($!)
-fi
-if [ ! -f $mageck_path/sort_var.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_sort --genes-varmodeling 1000 -n $mageck_path/sort_var --threads=1 &
-    pids+=($!)
-fi
+# ## MAGeCK MLE
+# echo "Submitting MAGeCK runs..."
+# if [ ! -f $mageck_path/topbot.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_topbot -n $mageck_path/topbot --threads=1 &
+#     pids+=($!)
+# fi
+# if [ ! -f $mageck_path/sort.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_sort -n $mageck_path/sort --threads=1 &
+#     pids+=($!)
+# fi
+# if [ ! -f $mageck_path/topbot_var.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_topbot --genes-varmodeling 1000 -n $mageck_path/topbot_var --threads=1 &
+#     pids+=($!)
+# fi
+# if [ ! -f $mageck_path/sort_var.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_sort --genes-varmodeling 1000 -n $mageck_path/sort_var --threads=1 &
+#     pids+=($!)
+# fi
 
-## MAGeCK MLE with EM, fixed eff
-mkdir -p $mageck_path/EM/
-if [ ! -f $mageck_path/EM/topbot.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_topbot -n $mageck_path/EM/topbot --threads=1 --sgrna-efficiency $sgrna_eff &
-    pids+=($!)
-fi
-if [ ! -f $mageck_path/EM/sort.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_sort -n $mageck_path/EM/sort --threads=1 --sgrna-efficiency $sgrna_eff &
-    pids+=($!)
-fi
-if [ ! -f $mageck_path/EM/topbot_var.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_topbot --genes-varmodeling 1000 -n $mageck_path/EM/topbot_var --threads=1 --sgrna-efficiency $sgrna_eff &
-    pids+=($!)
-fi
-if [ ! -f $mageck_path/EM/sort_var.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_sort --genes-varmodeling 1000 -n $mageck_path/EM/sort_var --threads=1 --sgrna-efficiency $sgrna_eff &
-    pids+=($!)
-fi
+# ## MAGeCK MLE with EM, fixed eff
+# mkdir -p $mageck_path/EM/
+# if [ ! -f $mageck_path/EM/topbot.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_topbot -n $mageck_path/EM/topbot --threads=1 --sgrna-efficiency $sgrna_eff &
+#     pids+=($!)
+# fi
+# if [ ! -f $mageck_path/EM/sort.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_sort -n $mageck_path/EM/sort --threads=1 --sgrna-efficiency $sgrna_eff &
+#     pids+=($!)
+# fi
+# if [ ! -f $mageck_path/EM/topbot_var.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_topbot --genes-varmodeling 1000 -n $mageck_path/EM/topbot_var --threads=1 --sgrna-efficiency $sgrna_eff &
+#     pids+=($!)
+# fi
+# if [ ! -f $mageck_path/EM/sort_var.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_sort --genes-varmodeling 1000 -n $mageck_path/EM/sort_var --threads=1 --sgrna-efficiency $sgrna_eff &
+#     pids+=($!)
+# fi
 
-## MAGeCK MLE with EM
-mkdir -p $mageck_path/EMf/
-if [ ! -f $mageck_path/EMf/topbot.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_topbot -n $mageck_path/EMf/topbot --threads=1 --sgrna-efficiency $sgrna_eff --update-efficiency &
-    pids+=($!)
-fi
-if [ ! -f $mageck_path/EMf/sort.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_sort -n $mageck_path/EMf/sort --threads=1 --sgrna-efficiency $sgrna_eff --update-efficiency &
-    pids+=($!)
-fi
-if [ ! -f $mageck_path/EMf/topbot_var.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_topbot --genes-varmodeling 1000 -n $mageck_path/EMf/topbot_var --threads=1 --sgrna-efficiency $sgrna_eff --update-efficiency &
-    pids+=($!)
-fi
-if [ ! -f $mageck_path/EMf/sort_var.gene_summary.txt ]; then
-    mageck mle -k $mageck_outfile -d $dm_sort --genes-varmodeling 1000 -n $mageck_path/EMf/sort_var --threads=1 --sgrna-efficiency $sgrna_eff --update-efficiency &
-    pids+=($!)
-fi
+# ## MAGeCK MLE with EM
+# mkdir -p $mageck_path/EMf/
+# if [ ! -f $mageck_path/EMf/topbot.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_topbot -n $mageck_path/EMf/topbot --threads=1 --sgrna-efficiency $sgrna_eff --update-efficiency &
+#     pids+=($!)
+# fi
+# if [ ! -f $mageck_path/EMf/sort.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_sort -n $mageck_path/EMf/sort --threads=1 --sgrna-efficiency $sgrna_eff --update-efficiency &
+#     pids+=($!)
+# fi
+# if [ ! -f $mageck_path/EMf/topbot_var.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_topbot --genes-varmodeling 1000 -n $mageck_path/EMf/topbot_var --threads=1 --sgrna-efficiency $sgrna_eff --update-efficiency &
+#     pids+=($!)
+# fi
+# if [ ! -f $mageck_path/EMf/sort_var.gene_summary.txt ]; then
+#     mageck mle -k $mageck_outfile -d $dm_sort --genes-varmodeling 1000 -n $mageck_path/EMf/sort_var --threads=1 --sgrna-efficiency $sgrna_eff --update-efficiency &
+#     pids+=($!)
+# fi
 
 ## MAGeCK RRA
 bot_samples=$(awk -F'\t' '{if ($3=='0') {print $1}}' $dm_topbot | paste -sd "," -)

@@ -24,10 +24,10 @@ def run_models(bdata_paths):
             ["sh", "scripts/run_models/run_bean_tiling.sh", bdata_path]
         )
         procs.append(p)
-        # p = subprocess.Popen(
-        #     ["sh", "scripts/run_models/run_mageck_tiling.sh", bdata_path]
-        # )
-        # procs.append(p)
+        p = subprocess.Popen(
+            ["sh", "scripts/run_models/run_mageck_tiling.sh", bdata_path]
+        )
+        procs.append(p)
     for p in procs:
         p.wait()
 
@@ -74,20 +74,21 @@ def main():
         )
         sub_bdata_prefixes.append(sub_bdata_prefix)
         sub_bdata_paths.append(f"{sub_bdata_prefix}.h5ad")
-        p = subprocess.Popen(
-            [
-                "python",
-                "scripts/run_models/subset_screen.py",
-                bdata_path,
-                rep_comb,
-                f"{sub_bdata_prefix}.h5ad",
-            ]
-        )
-        procs.append(p)
+        if not os.path.exists(f"{sub_bdata_prefix}.h5ad"):
+            p = subprocess.Popen(
+                [
+                    "python",
+                    "scripts/run_models/subset_screen.py",
+                    bdata_path,
+                    rep_comb,
+                    f"{sub_bdata_prefix}.h5ad",
+                ]
+            )
+            procs.append(p)
     for p in procs:
         p.wait()
 
-    # run_models(sub_bdata_paths)
+    run_models(sub_bdata_paths)
     evaluate_model_runs(sub_bdata_prefixes)
 
 
