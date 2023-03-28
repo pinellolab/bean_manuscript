@@ -43,9 +43,7 @@ matrix_prefix = (
 )
 if args.reps:
     args.prefix = (
-        args.prefix
-        + ".rep"
-        + "_".join([rep.replace("_", "") for rep in args.reps])
+        args.prefix + ".rep" + "_".join([rep.replace("_", "") for rep in args.reps])
     )
 
 bdata = be.read_h5ad(args.bdata_path)
@@ -72,6 +70,13 @@ edit_rates.to_csv("{}.sgrna_eff.txt".format(matrix_prefix), header=False, sep="\
 )
 if not args.sample_mask_column is None:
     bdata_use = bdata[:, bdata.samples[args.sample_mask_column] == 1]
+    bdata.samples["rev_mask"] = 1 - bdata.samples[args.sample_mask_column]
+    bdata_complete_rep = bdata[
+        :,
+        bdata.samples.rep.isin(
+            (bdata.samples.groupby("rep")["rev_mask"].sum() == 0).index.tolist()
+        ),
+    ]
 else:
     bdata_use = bdata
 
@@ -80,33 +85,45 @@ if args.dmatrix_topbot:
         bdata_use.samples["sort"] = bdata_use.samples.index.map(
             lambda s: s.rsplit("_")[-1]
         )
-    bdata_topbot = bdata_use[:, bdata_use.samples.sort.isin(["top", "bot"])]
-    dm = patsy.dmatrix("sort", bdata_topbot.samples, return_type="dataframe")
-    dm = dm.set_index(bdata_topbot.samples.index).reset_index()
-    dm = dm.rename(
-        columns={
-            "index": "Samples",
-            "Intercept": "baseline",
-            "sort[T.top]": "top_vs_bot",
-        }
+    bdata_topbot = bdata_use[:, bdata_use.samples.bin.isin(["top", "bot"])]
+    bdata_complete_topbot = bdata_complete_rep[
+        :, bdata_complete_rep.samples.bin.isin(["top", "bot"])
+    ]
+
+    def write_topbot_dmatrix(bdata_topbot, out_path):
+        dm = patsy.dmatrix("bin", bdata_topbot.samples, return_type="dataframe")
+        dm = dm.set_index(bdata_topbot.samples.index).reset_index()
+        dm = dm.rename(
+            columns={
+                "index": "Samples",
+                "Intercept": "baseline",
+                "bin[T.top]": "top_vs_bot",
+            }
+        )
+        with warnings.catch_warnings():
+            dm.iloc[:, 1:] = dm.iloc[:, 1:].astype(int)
+        if args.use_bcmatch:
+            dm_bcmatch = (
+                dm.set_index("Samples").rename("bcmatch_{}".format).reset_index()
+            )
+            dm = pd.concat((dm, dm_bcmatch), ignore_index=True)
+        dm.to_csv(out_path, sep="\t", index=False)
+
+    write_topbot_dmatrix(bdata_topbot, "{}.mageck_dm_topbot.txt".format(matrix_prefix))
+    write_topbot_dmatrix(
+        bdata_complete_topbot, "{}.mageck_dm_topbot_complete.txt".format(matrix_prefix)
     )
-    with warnings.catch_warnings():
-        dm.iloc[:, 1:] = dm.iloc[:, 1:].astype(int)
-    if args.use_bcmatch:
-        dm_bcmatch = dm.set_index("Samples").rename("bcmatch_{}".format).reset_index()
-        dm = pd.concat((dm, dm_bcmatch), ignore_index=True)
-    dm.to_csv("{}.mageck_dm_topbot.txt".format(matrix_prefix), sep="\t", index=False)
 
 if args.dmatrix_sort:
     if not "sort" in bdata_use.samples.columns:
         bdata_use.samples["sort"] = bdata_use.samples.index.map(
             lambda s: s.rsplit("_")[-1]
         )
-    bdata_sort = bdata_use[:, bdata_use.samples.sort != "bulk"]
+    bdata_sort = bdata_use[:, bdata_use.samples.bin != "bulk"]
     bdata_sort.samples["sort_num"] = 0
-    bdata_sort.samples.loc[bdata_sort.samples.sort == "low", "sort_num"] = 1
-    bdata_sort.samples.loc[bdata_sort.samples.sort == "high", "sort_num"] = 3
-    bdata_sort.samples.loc[bdata_sort.samples.sort == "top", "sort_num"] = 4
+    bdata_sort.samples.loc[bdata_sort.samples.bin == "low", "sort_num"] = 1
+    bdata_sort.samples.loc[bdata_sort.samples.bin == "high", "sort_num"] = 3
+    bdata_sort.samples.loc[bdata_sort.samples.bin == "top", "sort_num"] = 4
     dm = patsy.dmatrix("sort_num", bdata_sort.samples, return_type="dataframe")
     dm = dm.set_index(bdata_sort.samples.index).reset_index()
     dm = dm.rename(

@@ -8,7 +8,7 @@ import evaluate as ae
 
 model_ids = ["MultiMixtureNormal", "MultiMixtureNormal+Acc"]
 mageck_mle_disp_modes = ["sort", "sort_var"]
-
+mageck_rra_modes = ["bot"]
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Get performance metric and plot.")
