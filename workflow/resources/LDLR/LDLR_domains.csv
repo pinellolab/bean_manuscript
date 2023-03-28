@@ -1,0 +1,23 @@
+﻿# https://www.uniprot.org/uniprotkb/P01130/entry#family_and_domains,,,
+ID,POSITION(S),DESCRIPTION,source
+Domain,25-65,LDL-receptor class A 1,PROSITE-ProRule Annotation
+Domain,66-106,LDL-receptor class A 2,PROSITE-ProRule Annotation
+Domain,107-145,LDL-receptor class A 3,PROSITE-ProRule Annotation
+Domain,146-186,LDL-receptor class A 4,PROSITE-ProRule Annotation
+Domain,195-233,LDL-receptor class A 5,PROSITE-ProRule Annotation
+Domain,234-272,LDL-receptor class A 6,PROSITE-ProRule Annotation
+Domain,274-313,LDL-receptor class A 7,PROSITE-ProRule Annotation
+Domain,314-353,EGF-like 1,PROSITE-ProRule Annotation
+Domain,354-393,EGF-like 2; calcium-binding,PROSITE-ProRule Annotation
+Repeat,397-438,LDL-receptor class B 1,
+Repeat,439-485,LDL-receptor class B 2,
+Repeat,486-528,LDL-receptor class B 3,
+Repeat,529-572,LDL-receptor class B 4,
+Repeat,573-615,LDL-receptor class B 5,
+Repeat,616-658,LDL-receptor class B 6,
+Domain,663-712,EGF-like 3,PROSITE-ProRule Annotation
+Region,721-768,Clustered O-linked oligosaccharides,
+Compositional bias,734-749,Polar residues,Automatic Annotation
+Region,734-755,Disordered,Automatic Annotation
+Region,811-860,Required for MYLIP-triggered down-regulation of LDLR1,Publication
+Motif,823-828,NPXY motif1,Publication

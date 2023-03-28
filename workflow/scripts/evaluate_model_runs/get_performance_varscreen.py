@@ -1,4 +1,5 @@
 """Compare performances of multiple models for a screen object."""
+from typing import Sequence, Tuple, List
 import os
 import argparse
 from functools import partial
@@ -9,6 +10,7 @@ import evaluate as ae
 model_ids = ["Normal", "MixtureNormal", "MixtureNormal+Acc"]
 mageck_mle_disp_modes = ["sort", "sort_var"]
 mageck_mle_pi_modes = ["", "EM", "EMf"]
+mageck_rra_modes = ["bot"]
 
 
 def parse_args():
@@ -40,24 +42,32 @@ def get_mean_metric(df):
 
 
 def get_bean_results(result_path_format):
-
+    gene_order = None
     res_tbls = []
     for model_id in model_ids:
         tbl = pd.read_csv(result_path_format.format(model_id))
+        if gene_order is None:
+            gene_order = tbl["target"]
         tbl = tbl.add_suffix(f"_{model_id}")
         res_tbls.append(tbl.reset_index())
-    return pd.concat(res_tbls, axis=1)
+    return pd.concat(res_tbls, axis=1), gene_order
 
 
-def get_mageck_results(mageck_prefix):
-    def read_and_add_suffix(disp_mode, pi_mode):
+def get_mageck_results(mageck_prefix: str, gene_order: Sequence[str]):
+    def read_and_add_suffix(disp_mode, pi_mode, gene_order):
         res_path = f"{mageck_prefix}/{pi_mode}/{disp_mode}.gene_summary.txt"
-        tbl = pd.read_table(res_path, sep="\t")
+        tbl = pd.read_table(res_path, sep="\t", index_col=0).reindex(gene_order)
         tbl = tbl.add_suffix(f"_{disp_mode}_{pi_mode}")
-        return tbl
+        return tbl.reset_index()
+
+    def read_and_add_suffix_rra(mode, gene_order):
+        res_path = f"{mageck_prefix}/rra_{mode}.gene_summary.txt"
+        tbl = pd.read_table(res_path, sep="\t", index_col=0).reindex(gene_order)
+        tbl = tbl.add_suffix(f"_rra_{mode}")
+        return tbl.reset_index()
 
     tbls = [
-        read_and_add_suffix(disp_mode, pi_mode)
+        read_and_add_suffix(disp_mode, pi_mode, gene_order)
         for disp_mode in mageck_mle_disp_modes
         for pi_mode in mageck_mle_pi_modes
     ]
@@ -66,7 +76,17 @@ def get_mageck_results(mageck_prefix):
         for disp_mode in mageck_mle_disp_modes
         for pi_mode in mageck_mle_pi_modes
     ]
+
+    # RRA
+    tbls += [read_and_add_suffix_rra(mode, gene_order) for mode in mageck_rra_modes]
+    labels += [f"MAGeCK-RRA_{mode}" for mode in mageck_rra_modes]
     return pd.concat(tbls, axis=1), labels
+
+
+def get_other_results(
+    other_prefix: str, gene_order: Sequence[str]
+) -> Tuple[pd.DataFrame, List[str]]:
+    NotImplemented
 
 
 def get_metrics_bidirectional(
@@ -138,6 +158,7 @@ def main():
     bean_result_path_format = f"results/model_runs/bean/bean_run_result.{args.screen_name}/bean_element_result.{{}}.csv"
     guide_info_path = args.guide_info_path
     mageck_prefix = f"results/model_runs/mageck/{args.screen_name}/"
+    other_prefix = NotImplemented
 
     guide_info = pd.read_csv(guide_info_path)
     target_info = (
@@ -158,33 +179,40 @@ def main():
         )
     ctrl_idx = np.where(target_info.Group2 == "NegCtrl")[0]
 
-    def get_cols(bean_pattern, mageck_pattern):
-        return [bean_pattern.format(m) for m in model_ids] + [
-            mageck_pattern.format(disp_mode, pi_mode)
-            for disp_mode in mageck_mle_disp_modes
-            for pi_mode in mageck_mle_pi_modes
-        ]
+    def get_cols(bean_pattern, mageck_pattern, mageck_rra_pattern):
+        return (
+            [bean_pattern.format(m) for m in model_ids]
+            + [
+                mageck_pattern.format(disp_mode, pi_mode)
+                for disp_mode in mageck_mle_disp_modes
+                for pi_mode in mageck_mle_pi_modes
+            ]
+            + [mageck_rra_pattern.format(mode) for mode in mageck_rra_modes]
+        )
 
-    bean_results = get_bean_results(bean_result_path_format)
-    mageck_results, mageck_labels = get_mageck_results(mageck_prefix)
+    bean_results, gene_order = get_bean_results(bean_result_path_format)
+    mageck_results, mageck_labels = get_mageck_results(mageck_prefix, gene_order)
+    other_results, other_labels = get_other_results(other_prefix, gene_order)
+    """This is where other method output should be read in. If the output does not have the same order as they appear in the input rows, use `gene_order` to sort them."""
+
     all_results = pd.concat([bean_results, mageck_results], axis=1)
     all_results.to_csv(f"results/model_runs/{args.screen_name}/all_scores.csv")
 
     kwargs = {
         "res_tbl": pd.concat([bean_results, mageck_results], axis=1),
-        "z_cols": get_cols("mu_z_{}", "sort_num|z_{}_{}"),
-        "fdr_inc_cols": get_cols("fdr_inc_{}", "sort_num|fdr_{}_{}"),
-        "fdr_dec_cols": get_cols("fdr_dec_{}", "sort_num|fdr_{}_{}"),
+        "z_cols": get_cols("mu_z_{}", "sort_num|z_{}_{}", "pos|lfc_rra_{}"),
+        "fdr_inc_cols": get_cols("fdr_inc_{}", "sort_num|fdr_{}_{}", "neg|fdr_rra_{}"),
+        "fdr_dec_cols": get_cols("fdr_dec_{}", "sort_num|fdr_{}_{}", "pos|fdr_rra_{}"),
         "labels": model_ids + mageck_labels,
         "pos_idx": pos_idx,
         "neg_idx": neg_idx,
         "ctrl_idx": ctrl_idx,
     }
 
-    precisions = get_metrics(ae.get_precision, **kwargs)
-    recalls = get_metrics(ae.get_recall, **kwargs)
-    fdr_f1s = get_metrics(partial(ae.get_fdr_f, beta=1), **kwargs)
-    fdr_f01s = get_metrics(partial(ae.get_fdr_f, beta=0.1), **kwargs)
+    precisions = get_metrics_bidirectional(ae.get_precision, **kwargs)
+    recalls = get_metrics_bidirectional(ae.get_recall, **kwargs)
+    fdr_f1s = get_metrics_bidirectional(partial(ae.get_fdr_f, beta=1), **kwargs)
+    fdr_f01s = get_metrics_bidirectional(partial(ae.get_fdr_f, beta=0.1), **kwargs)
     aurocs = get_auroc_auprc(ae.get_auroc, **kwargs)
     auprcs = get_auroc_auprc(ae.get_auprc, **kwargs)
 

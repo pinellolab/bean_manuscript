@@ -13,6 +13,7 @@ mkdir -p $mageck_path
 mageck_outfile=$mageck_path/$(basename "${bdata_path}" .h5ad).mageck_input.txt
 sgrna_eff=$mageck_path/$(basename "${bdata_path}" .h5ad).mageck_sgrna_eff.txt
 dm_topbot=${mageck_path}/$(basename "${bdata_path}" .h5ad).mageck_dm_topbot.txt
+dm_topbot_complete=${mageck_path}/$(basename "${bdata_path}" .h5ad).mageck_dm_topbot_complete.txt
 dm_sort=${mageck_path}/$(basename "${bdata_path}" .h5ad).mageck_dm_sort.txt
 
 if [ ! -f $mageck_outfile ] || [ ! -f $dm_topbot ] || [ ! -f $dm_sort ] || [ ! -f $sgrna_eff ]; then
@@ -77,6 +78,26 @@ if [ ! -f $mageck_path/EMf/sort_var.gene_summary.txt ]; then
     mageck mle -k $mageck_outfile -d $dm_sort --genes-varmodeling 1000 -n $mageck_path/EMf/sort_var --threads=1 --sgrna-efficiency $sgrna_eff --update-efficiency &
     pids+=($!)
 fi
+
+## MAGeCK RRA
+bot_samples=$(awk -F'\t' '{if ($3=='0') {print $1}}' $dm_topbot_complete | paste -sd "," -)
+top_samples=$(awk -F'\t' '{if ($3=='1') {print $1}}' $dm_topbot_complete | paste -sd "," -)
+if [ $rerun ] || [ ! -f "$mageck_path/rra_top.gene_summary.txt" ]; then
+    echo "Running MAGeCK RRA..."
+    mageck test -k $mageck_outfile -t $top_samples -c $bot_samples --paired -n $mageck_path/rra_top 
+    pids+=($!)
+fi
+if [ $rerun ] || [ ! -f "$mageck_path/rra_bot.gene_summary.txt" ]; then
+    echo "Running MAGeCK RRA..."
+    mageck test -k $mageck_outfile -t $bot_samples -c $top_samples --paired -n $mageck_path/rra_bot 
+    pids+=($!)
+fi
+
+## CRISPhieRmix
+
+## ACE
+
+## BAGEL
 
 for pid in ${pids[*]}; do
     wait $pid

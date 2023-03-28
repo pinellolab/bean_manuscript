@@ -1,11 +1,12 @@
 import itertools
 ruleorder: map_plasmid > map_samples
 
-LIBS = ["LDLvar", "LDLRCDS"]
-
+LIBS = ["LDLvar", "LDLRCDS", "LDLRCDS_CBE_SpRY", "LDLRCDS_CBE_CasNG"]
 REPS = {
     "LDLvar":list(range(1, 16)), #1-15
-    "LDLRCDS":list(range(1, 10)) #1-9
+    "LDLRCDS":list(range(1, 10)), #1-9
+    "LDLRCDS_CBE_SpRY": list(range(1, 5)),
+    "LDLRCDS_CBE_CasNG": list(range(1, 5)),
 }
 # rule get_fastq_data:
 #     output:
@@ -48,6 +49,21 @@ rule map_plasmid:
         shell(
             "bean-count --R1 {input.plasmid_R1} --R2 {input.plasmid_R2} -b A -f {input.guide_info} -o {params.output_dir} -r --guide-start-seq=GGAAAGGACGAAACACCG")
 
+rule map_CBE_plasmid:
+    input:
+        guide_info = 'resources/gRNA_info/LDLRCDS_gRNA_bean.csv',
+        plasmid_R1 = "results/raw/LDLRCDS/LDLRCDS_plasmid_R1.fastq.gz",
+        plasmid_R2 = "results/raw/LDLRCDS/LDLRCDS_plasmid_R2.fastq.gz",
+    params:
+        output_dir = 'results/mapped/LDLRCDS'
+    output:
+        out_h5ad = 'results/mapped/LDLRCDS/bean_count_LDLRCDS_plasmid_CBE.h5ad'
+    run:
+        shell('mkdir -p {params.output_dir}')
+        shell(
+            "bean-count --R1 {input.plasmid_R1} --R2 {input.plasmid_R2} -b C -f {input.guide_info} -o {params.output_dir} -r --guide-start-seq=GGAAAGGACGAAACACCG")
+        
+
 rule map_samples:
     input:
         guide_info = 'resources/gRNA_info/{lib}_gRNA_bean.csv',
@@ -59,9 +75,15 @@ rule map_samples:
         out_h5ad = 'results/mapped/{lib}/bean_count_{lib}.h5ad'
     run:
         shell('mkdir -p {params.output_dir}')
-        map_script = "bean-count-samples --input {input.sample_list} -b A -f {input.guide_info} -o {params.output_dir} -r -t 12 --name {wildcards.lib} --guide-start-seqs-file={input.guide_start_seqs}"
+        map_script = "bean-count-samples --input {input.sample_list} -f {input.guide_info} -o {params.output_dir} -r -t 12 --name {wildcards.lib} --guide-start-seqs-file={input.guide_start_seqs}"
         if wildcards.lib == "LDLvar":
             map_script += " --match_target_pos"
+        else:
+            map_script += " --tiling"
+        if wildcards.lib in ["LDLvar", "LDLRCDS"]:
+            map_script += " -b A"
+        else:
+            map_script += " -b C"
         shell(map_script)
 
 rule map_all:

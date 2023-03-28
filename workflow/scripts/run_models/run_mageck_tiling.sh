@@ -14,6 +14,7 @@ for target_col in target_allEdited target_behive; do
     mageck_outfile=$mageck_path/$(basename "${bdata_path}" .h5ad).mageck_input.txt
     sgrna_eff=$mageck_path/$(basename "${bdata_path}" .h5ad).mageck_sgrna_eff.txt
     dm_topbot=${mageck_path}/$(basename "${bdata_path}" .h5ad).mageck_dm_topbot.txt
+    dm_topbot_complete=${mageck_path}/$(basename "${bdata_path}" .h5ad).mageck_dm_topbot_complete.txt
     dm_sort=${mageck_path}/$(basename "${bdata_path}" .h5ad).mageck_dm_sort.txt
 
 
@@ -42,6 +43,22 @@ for target_col in target_allEdited target_behive; do
         mageck mle -k $mageck_outfile -d $dm_sort --genes-varmodeling 1000 -n $mageck_path/sort_var --threads=1 &
         pids+=($!)
     fi
+
+    # MAGeCK RRA
+    bot_samples=$(awk -F'\t' '{if ($3=='0') {print $1}}' $dm_topbot_complete | paste -sd "," -)
+    top_samples=$(awk -F'\t' '{if ($3=='1') {print $1}}' $dm_topbot_complete | paste -sd "," -)
+    if [ $rerun ] || [ ! -f "$mageck_path/rra_top.gene_summary.txt" ]; then
+        echo "Running MAGeCK RRA..."
+        mageck test -k $mageck_outfile -t $top_samples -c $bot_samples --paired -n $mageck_path/rra_top 
+        pids+=($!)
+    fi
+    if [ $rerun ] || [ ! -f "$mageck_path/rra_bot.gene_summary.txt" ]; then
+        echo "Running MAGeCK RRA..."
+        mageck test -k $mageck_outfile -t $bot_samples -c $top_samples --paired -n $mageck_path/rra_bot 
+        pids+=($!)
+    fi
+
+
 done
 
 for pid in ${pids[*]}; do
