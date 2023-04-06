@@ -21,7 +21,7 @@ option_list = list(
                 help="Input anndata object", 
                 metavar="character"),
     make_option(c("-o", "--output"), type="character", default=NULL, 
-                help="Output filename", metavar="character")
+                help="Output directory", metavar="character")
 )
 
 opt_parser = OptionParser(option_list=option_list)
@@ -92,5 +92,7 @@ colnames(counts_bcmatch) <- paste0("bcmatch_", colnames(counts_bcmatch))
 
 counts <- cbind(counts, counts_bcmatch)
 var.top.bot <- rbind(var.top.bot, var.top.bot2)
+
+df <- get_results(counts, var.top.bot, obs)
 write.csv(df, glue::glue("{opt$output}/CRISPhieRmix_with_bcmatch.csv"))
 
