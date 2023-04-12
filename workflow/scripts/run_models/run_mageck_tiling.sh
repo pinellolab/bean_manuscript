@@ -4,8 +4,9 @@ bdata_path=$1
 mask_col=mask
 pids=()
 
-mageck_result_prefix=results/model_runs/mageck
-
+#mageck_result_prefix=results/model_runs/mageck
+mageck_result_prefix=$2
+trailing_args=${@:3}
 
 # MAGeCK input file /PHShome/jr1025/projects/ANBE/mageck_results/
 for target_col in target_allEdited target_behive; do

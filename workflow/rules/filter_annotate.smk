@@ -66,13 +66,12 @@ rule annotate_tiling:
 rule annotate_tiling_CBEs:
     input:
         input_h5ad='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_alleleFiltered.h5ad',
-        behive_pred='resources/gRNA_info/target_prediction/LDLR-ABE_BEHive_consequence.xlsx',
-        behive_ctrl_pred='resources/gRNA_info/target_prediction/control_gRNA_BEHive_consequence.csv', #TODO: needs to be updated
+        behive_pred='resources/gRNA_info/target_prediction/LDLR-CBE_BEHive_consequence.csv',
         splice_sites='resources/LDLR/LDLR_CBE_splice_targets.csv'
     output:
         output_h5ad='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_annotated.h5ad',
     run:
-        shell("python scripts/filter_annotate/assign_guide_to_outcome.py both {input.input_h5ad} {output.output_h5ad} -s {input.splice_sites} -p {input.behive_pred} --write-bdata --control-guide-tag CBE_CONTROL")
+        shell("python scripts/filter_annotate/assign_guide_to_outcome.py both {input.input_h5ad} {output.output_h5ad} -s {input.splice_sites} -p {input.behive_pred} --write-bdata --control-guide-tag CBE_CONTROL --cbe")
         shell("python scripts/run_models/add_quantiles.py {output.output_h5ad} {output.output_h5ad}")
 
 

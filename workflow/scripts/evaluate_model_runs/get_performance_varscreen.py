@@ -25,6 +25,7 @@ def parse_args():
         default="resources/gRNA_info/LDLvar_gRNA_bean_accessibility.csv",
     )
     parser.add_argument("--control", type=str, default="splicing")
+    parser.add_argument("--result-suffix", type=str, default="")
     return parser.parse_args()
 
 
@@ -83,10 +84,13 @@ def get_mageck_results(mageck_prefix: str, gene_order: Sequence[str]):
     return pd.concat(tbls, axis=1), labels
 
 
-def get_other_results(
-    other_prefix: str, gene_order: Sequence[str]
+def get_cb2_results(
+    cb2_prefix: str, gene_order: Sequence[str]
 ) -> Tuple[pd.DataFrame, List[str]]:
-    NotImplemented
+    res_path = f"{cb2_prefix}/CB2_with_bcmatch.csv"
+    tbl = pd.read_table(res_path, sep="\t", index_col=0).reindex(gene_order)
+    tbl = tbl.add_suffix("_CB2")
+    return tbl.reset_index(), ["CB2"]
 
 
 def get_metrics_bidirectional(
@@ -155,29 +159,31 @@ def main():
     args = parse_args()
     output_path = f"results/model_runs/{args.screen_name}"
     os.makedirs(output_path, exist_ok=True)
-    bean_result_path_format = f"results/model_runs/bean/bean_run_result.{args.screen_name}/bean_element_result.{{}}.csv"
+    bean_result_path_format = f"results/model_runs/bean{args.result_suffix}/bean_run_result.{args.screen_name}/bean_element_result.{{}}.csv"
     guide_info_path = args.guide_info_path
-    mageck_prefix = f"results/model_runs/mageck/{args.screen_name}/"
-    other_prefix = NotImplemented
+    mageck_prefix = f"results/model_runs/mageck{args.result_suffix}/{args.screen_name}/"
+    cb2_prefix = f"results/model_runs/CB2{args.result_suffix}/{args.screen_name}/"
 
-    guide_info = pd.read_csv(guide_info_path)
+    guide_info = pd.read_csv(guide_info_path).rename(
+        columns={"Target gene/variant": "target_variant", "Group2": "target_group2"}
+    )
     target_info = (
-        guide_info[["target", "Target gene/variant", "Group2"]]
+        guide_info[["target", "target_variant", "target_group2"]]
         .drop_duplicates()
         .set_index("target", drop=True)
     )
 
     if args.control == "splicing":
-        pos_idx = np.where(target_info.Group2 == "PosCtrl_inc")[0]
-        neg_idx = np.where(target_info.Group2 == "PosCtrl_dec")[0]
+        pos_idx = np.where(target_info["target_group2"] == "PosCtrl_inc")[0]
+        neg_idx = np.where(target_info["target_group2"] == "PosCtrl_dec")[0]
     elif args.control == "strongest_splicing":
-        pos_idx = np.where(target_info["Target gene/variant"] == "MYLIP")[0]
-        neg_idx = np.where(target_info["Target gene/variant"] == "LDLR")[0]
+        pos_idx = np.where(target_info["target_variant"] == "MYLIP")[0]
+        neg_idx = np.where(target_info["target_variant"] == "LDLR")[0]
     else:
         raise ValueError(
             f"Invalid --control {args.control} provided. Use one of 'splicing' or 'strongest_splicing'."
         )
-    ctrl_idx = np.where(target_info.Group2 == "NegCtrl")[0]
+    ctrl_idx = np.where(target_info["target_group2"] == "NegCtrl")[0]
 
     def get_cols(bean_pattern, mageck_pattern, mageck_rra_pattern):
         return (
@@ -192,14 +198,15 @@ def main():
 
     bean_results, gene_order = get_bean_results(bean_result_path_format)
     mageck_results, mageck_labels = get_mageck_results(mageck_prefix, gene_order)
-    other_results, other_labels = get_other_results(other_prefix, gene_order)
-    """This is where other method output should be read in. If the output does not have the same order as they appear in the input rows, use `gene_order` to sort them."""
+    cb2_results, cb2_labels = get_cb2_results(cb2_prefix, gene_order)
 
-    all_results = pd.concat([bean_results, mageck_results], axis=1)
-    all_results.to_csv(f"results/model_runs/{args.screen_name}/all_scores.csv")
+    all_results = pd.concat([bean_results, mageck_results, cb2_results], axis=1)
+    all_results.to_csv(
+        f"results/model_runs/{args.screen_name}/all_scores{args.result_suffix}.csv"
+    )
 
     kwargs = {
-        "res_tbl": pd.concat([bean_results, mageck_results], axis=1),
+        "res_tbl": all_results,
         "z_cols": get_cols("mu_z_{}", "sort_num|z_{}_{}", "pos|lfc_rra_{}"),
         "fdr_inc_cols": get_cols("fdr_inc_{}", "sort_num|fdr_{}_{}", "neg|fdr_rra_{}"),
         "fdr_dec_cols": get_cols("fdr_dec_{}", "sort_num|fdr_{}_{}", "pos|fdr_rra_{}"),
@@ -232,7 +239,7 @@ def main():
     avg_perf_df = pd.concat(avg_perf_dict.values(), axis=1, keys=avg_perf_dict.keys())
 
     writer = pd.ExcelWriter(
-        f"results/model_runs/{args.screen_name}/{args.control}.metrics.xlsx",
+        f"results/model_runs/{args.screen_name}/{args.control}{args.result_suffix}.metrics.xlsx",
         engine="xlsxwriter",
     )
     avg_perf_df.style.set_properties(**{"width": "px"}).background_gradient().to_excel(

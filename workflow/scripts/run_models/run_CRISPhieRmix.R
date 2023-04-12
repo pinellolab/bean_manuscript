@@ -22,6 +22,8 @@ option_list = list(
                 metavar="character"),
     make_option(c("-o", "--output"), type="character", default=NULL, 
                 help="Output directory", metavar="character")
+    make_option(c("-c", "--control"), type="character", default=NULL, 
+                help="Control label", metavar="character")
 )
 
 opt_parser = OptionParser(option_list=option_list)
@@ -39,10 +41,10 @@ get_results <- function(counts, colData, obs){
     # set log2fc to zero if for NAN
     log2fc[is.na(log2fc)] <- 0.0
     
-    negCtrl = log2fc[which(obs$target_group == "NegCtrl")]
-    log2fc = log2fc[-which(obs$target_group == "NegCtrl")]
+    negCtrl = log2fc[which(obs$target_group == opt$control)]
+    log2fc = log2fc[-which(obs$target_group == opt$control)]
     
-    geneIds = rownames(obs)[-which(obs$target_group == "NegCtrl")]
+    geneIds = rownames(obs)[-which(obs$target_group == opt$control)]
     geneIds = factor(geneIds, levels = unique(geneIds))
     
     log2fcCRISPhieRmixFit <- CRISPhieRmix(log2fc, geneIds = geneIds, negCtrl = negCtrl, 

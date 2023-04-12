@@ -16,6 +16,14 @@ if "LDLvar" in bdata_path:
         ],
         axis=1,
     )
+    bdata.guides = bdata.guides.rename(
+        columns={
+            "target_pos": "spacer_target_pos",
+            "Target gene/variant": "target_variant",
+            "Group": "target_group",
+            "Group2": "target_group2",
+        }
+    )
 else:
     if "targetPos" in bdata.guides.columns:
         bdata.guides = bdata.guides.rename(columns={"targetPos": "genomic_pos"})

@@ -138,3 +138,5 @@ if args.dmatrix_sort:
         dm_bcmatch = dm.set_index("Samples").rename("bcmatch_{}".format).reset_index()
         dm = pd.concat((dm, dm_bcmatch), ignore_index=True)
     dm.to_csv("{}.mageck_dm_sort.txt".format(matrix_prefix), sep="\t", index=False)
+
+# write negctrl
