@@ -51,9 +51,14 @@ var.top.bot$group <- var.top.bot$bin
 var.top.bot$sample_name <- rownames(var.top.bot)
 
 rownames(counts) <- stringi::stri_replace_last_fixed(rownames(counts), "_", "-")
-df <- measure_sgrna_stats(counts, var.top.bot, "top", "bot", delim = "-")
-df$sgRNA <- stringi::stri_replace_last_fixed(df$sgRNA, "-", "_")
-write.csv(df, glue::glue("{opt$output}/CB2.csv"))
+sgrna_stat <- measure_sgrna_stats(counts, var.top.bot, "top", "bot", delim = "-")
+sgrna_stat$sgRNA <- stringi::stri_replace_last_fixed(sgrna_stat$sgRNA, "-", "_")
+write.csv(sgrna_stat, glue::glue("{opt$output}/CB2.csv"))
+
+df <- stringr::str_split_fixed(sgrna_stat$sgRNA, "_", 3)
+sgrna_stat$gene <- paste0(df[, 1], "_", df[, 2])
+gene_stat <- measure_gene_stats(sgrna_stat, logFC_level = "gene")
+write.csv(gene_stat, glue::glue("{opt$output}/CB2_gene.csv"))
 
 ########################################################################
 counts_bcmatch <- adata$layers$X_bcmatch
@@ -75,8 +80,12 @@ rownames(counts_bcmatch) <- stringi::stri_replace_last_fixed(rownames(counts_bcm
 counts <- cbind(counts, counts_bcmatch)
 var.top.bot <- rbind(var.top.bot, var.top.bot2)
 
-df <- measure_sgrna_stats(counts, var.top.bot, "top", "bot", delim = "-")
-df$sgRNA <- stringi::stri_replace_last_fixed(df$sgRNA, "-", "_")
+sgrna_stat <- measure_sgrna_stats(counts, var.top.bot, "top", "bot", delim = "-")
+sgrna_stat$sgRNA <- stringi::stri_replace_last_fixed(sgrna_stat$sgRNA, "-", "_")
 
-write.csv(df, glue::glue("{opt$output}/CB2_with_bcmatch.csv"))
+write.csv(sgrna_stat, glue::glue("{opt$output}/CB2_with_bcmatch.csv"))
 
+df <- stringr::str_split_fixed(sgrna_stat$sgRNA, "_", 3)
+sgrna_stat$gene <- paste0(df[, 1], "_", df[, 2])
+gene_stat <- measure_gene_stats(sgrna_stat, logFC_level = "gene")
+write.csv(gene_stat, glue::glue("{opt$output}/CB2_with_bcmatch_gene.csv"))
