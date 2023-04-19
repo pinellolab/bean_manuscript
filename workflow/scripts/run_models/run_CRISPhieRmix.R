@@ -7,13 +7,14 @@
 ## Date Created: 2023-04-03
 ## Email: lzj1769@gmail.com
 ## ---------------------------
-
+library(reticulate)
+use_python("/data/pinello/SHARED_SOFTWARE/anaconda_latest/envs/zl_anbe/bin/python")
 suppressMessages(library(CRISPhieRmix))
 suppressMessages(library(DESeq2))
 suppressMessages(library(optparse))
 suppressMessages(library(glue))
 
-source("/data/pinello/PROJECTS/2023_03_ZL_ANBE/bean_manuscript/workflow/scripts/run_models/helper.R")
+source("scripts/run_models/helper.R")
 
 
 option_list = list(
@@ -21,7 +22,7 @@ option_list = list(
                 help="Input anndata object", 
                 metavar="character"),
     make_option(c("-o", "--output"), type="character", default=NULL, 
-                help="Output directory", metavar="character")
+                help="Output directory", metavar="character"),
     make_option(c("-c", "--control"), type="character", default=NULL, 
                 help="Control label", metavar="character")
 )
@@ -41,10 +42,10 @@ get_results <- function(counts, colData, obs){
     # set log2fc to zero if for NAN
     log2fc[is.na(log2fc)] <- 0.0
     
-    negCtrl = log2fc[which(obs$target_group == opt$control)]
-    log2fc = log2fc[-which(obs$target_group == opt$control)]
+    negCtrl = log2fc[which(obs$Region == opt$control)]
+    log2fc = log2fc[-which(obs$Region == opt$control)]
     
-    geneIds = rownames(obs)[-which(obs$target_group == opt$control)]
+    geneIds = rownames(obs)[-which(obs$Region == opt$control)]
     geneIds = factor(geneIds, levels = unique(geneIds))
     
     log2fcCRISPhieRmixFit <- CRISPhieRmix(log2fc, geneIds = geneIds, negCtrl = negCtrl, 

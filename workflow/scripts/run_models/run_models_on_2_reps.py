@@ -22,7 +22,14 @@ def run_models(bdata_paths):
     for bdata_path in bdata_paths:
         p = subprocess.Popen(["sh", "scripts/run_models/run_bean_var.sh", bdata_path])
         procs.append(p)
-        p = subprocess.Popen(["sh", "scripts/run_models/run_mageck_var.sh", bdata_path])
+        p = subprocess.Popen(
+            [
+                "sh",
+                "scripts/run_models/run_mageck_var.sh",
+                bdata_path,
+                "results/model_runs/mageck",
+            ]
+        )
         procs.append(p)
         p = subprocess.Popen(["sh", "scripts/run_models/run_CB2_var.sh", bdata_path])
         procs.append(p)

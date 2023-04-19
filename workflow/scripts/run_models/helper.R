@@ -1,5 +1,5 @@
-suppressMessages(library(reticulate))
-
+#suppressMessages(library(reticulate))
+#use_python("/data/pinello/SHARED_SOFTWARE/anaconda_latest/envs/anbe_benchmark/bin/python")
 # define helper functions for reading anndata object
 read_h5ad <- function(
   filename,

@@ -94,9 +94,10 @@ rule run_cb2:
     input:
         input_h5ad="results/filtered_annotated/LDLvar/bean_count_LDLvar_annotated.h5ad"
     output:
-        cb2_out="results/model_runs/CB2/CB2_run_result.bean_count_LDLvar_annotated/CB2_with_bcmatch.csv",
+        cb2_out="results/model_runs/CB2/CB2_run_result.bean_count_LDLvar_annotated/CB2_with_bcmatch_gene.csv",
     run:
         shell("sh scripts/run_models/run_CB2_var.sh {input.input_h5ad}")
+        
 
 rule evaluate_varscreen:
     input:
@@ -111,6 +112,7 @@ rule evaluate_varscreen:
         normal_res="results/model_runs/bean/bean_run_result.bean_count_LDLvar_annotated/bean_element_result.Normal.csv",
         mixnormal_res="results/model_runs/bean/bean_run_result.bean_count_LDLvar_annotated/bean_element_result.MixtureNormal.csv",
         mixnormal_acc_res="results/model_runs/bean/bean_run_result.bean_count_LDLvar_annotated/bean_element_result.MixtureNormal+Acc.csv",
+        cb2_res="results/model_runs/CB2/CB2_run_result.bean_count_LDLvar_annotated/CB2_with_bcmatch_gene.csv",
     params:
         bean_prefix="results/model_runs/bean/bean_count_LDLvar_annotated",
         mageck_prefix="results/model_runs/mageck/bean_count_LDLvar_annotated/",
@@ -274,6 +276,25 @@ rule run_mageck_tiling_negctrl:
     run:
         shell("sh scripts/run_models/run_mageck_tiling.sh {input.input_h5ad} results/model_runs/mageck_negctrl/ --negctrl")
 
+rule run_cb2_tiling:
+    input:
+        input_h5ad="results/filtered_annotated/{tiling_lib}/bean_count_{tiling_lib}_annotated.h5ad"
+    output:
+        cb2_out_all="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated.target_allEdited/CB2_with_bcmatch_gene.csv",
+        cb2_out_pred="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated.target_behive/CB2_with_bcmatch_gene.csv",
+    run:
+        shell("sh scripts/run_models/run_CB2_tiling.sh {input.input_h5ad}")
+
+rule run_crisphieRmix_tiling_negctrl:
+    input:
+        input_h5ad="results/filtered_annotated/{tiling_lib}/bean_count_{tiling_lib}_annotated.h5ad"
+    params:
+        control_label=lambda wildcards: "CBE control" if "CBE" in wildcards.tiling_lib else "ABE control"
+    output:
+        crisphiermix_out="results/model_runs/CRISPhieRmix/CRISPhieRmix_run_result.bean_count_{tiling_lib}_annotated/CRISPhieRmix_with_bcmatch.csv",
+    run:
+        shell("sh scripts/run_models/run_CRISPhieRmix_tiling_negctrl.sh {input.input_h5ad} {params.control_label}")
+
 rule evaluate_tiling:
     input:
         mle_out_all="results/model_runs/mageck/bean_count_{tiling_lib}_annotated.target_allEdited/sort.gene_summary.txt",
@@ -313,6 +334,9 @@ rule evaluate_tiling_negctrl:
         normal_res_pred="results/model_runs/bean_negctrl/bean_run_result.bean_count_{tiling_lib}_annotated/bean_element_result.Normal_behive.csv",
         mixnormal_res="results/model_runs/bean_negctrl/bean_run_result.bean_count_{tiling_lib}_annotated/bean_element_result.MultiMixtureNormal.csv",
         mixnormal_acc_res="results/model_runs/bean_negctrl/bean_run_result.bean_count_{tiling_lib}_annotated/bean_element_result.MultiMixtureNormal+Acc.csv",
+        #crisphiermix_res="results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{tiling_lib}_annotated/CRISPhieRmix_with_bcmatch.csv",
+        cb2_out_all="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated.target_allEdited/CB2_with_bcmatch_gene.csv",
+        cb2_out_pred="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated.target_behive/CB2_with_bcmatch_gene.csv",
     params:
         bean_prefix="results/model_runs/bean_negctrl/bean_count_{tiling_lib}_annotated",
         mageck_prefix="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated/",

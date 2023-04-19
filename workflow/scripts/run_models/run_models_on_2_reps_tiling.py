@@ -46,8 +46,19 @@ def run_models(bdata_paths, provide_negctrl=False):
         if provide_negctrl:
             p = subprocess.Popen(
                 [
-                    "sh", f""
+                    "sh",
+                    "scripts/run_models/run_CRISPhieRmix_tiling_negctrl.sh",
+                    f"{'CBE' if 'CBE' in bdata_path else 'ABE'} control",
                 ]
+            )
+        p = subprocess.Popen(
+            [
+                "sh",
+                "scripts/run_models/run_CB2_tiling.sh",
+                bdata_path,
+            ]
+        )
+        procs.append(p)
     for p in procs:
         p.wait()
 

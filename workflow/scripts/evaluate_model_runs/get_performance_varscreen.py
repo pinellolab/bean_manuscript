@@ -30,7 +30,6 @@ def parse_args():
 
 
 def get_average_metric(df, pos_idx, neg_idx):
-    print(df)
     return (df.iloc[:, 0] * len(pos_idx) + df.iloc[:, 1] * len(neg_idx)) / (
         len(pos_idx) + len(neg_idx)
     )
@@ -49,7 +48,12 @@ def get_bean_results(result_path_format):
         tbl = pd.read_csv(result_path_format.format(model_id))
         if gene_order is None:
             gene_order = tbl["target"]
-        tbl = tbl.add_suffix(f"_{model_id}")
+        tbl = (
+            tbl.set_index("target")
+            .reindex(gene_order)
+            .reset_index(drop=False)
+            .add_suffix(f"_{model_id}")
+        )
         res_tbls.append(tbl.reset_index())
     return pd.concat(res_tbls, axis=1), gene_order
 
@@ -87,8 +91,8 @@ def get_mageck_results(mageck_prefix: str, gene_order: Sequence[str]):
 def get_cb2_results(
     cb2_prefix: str, gene_order: Sequence[str]
 ) -> Tuple[pd.DataFrame, List[str]]:
-    res_path = f"{cb2_prefix}/CB2_with_bcmatch.csv"
-    tbl = pd.read_table(res_path, sep="\t", index_col=0).reindex(gene_order)
+    res_path = f"{cb2_prefix}/CB2_with_bcmatch_gene.csv"
+    tbl = pd.read_csv(res_path).set_index("gene").reindex(gene_order)
     tbl = tbl.add_suffix("_CB2")
     return tbl.reset_index(), ["CB2"]
 
@@ -162,28 +166,13 @@ def main():
     bean_result_path_format = f"results/model_runs/bean{args.result_suffix}/bean_run_result.{args.screen_name}/bean_element_result.{{}}.csv"
     guide_info_path = args.guide_info_path
     mageck_prefix = f"results/model_runs/mageck{args.result_suffix}/{args.screen_name}/"
-    cb2_prefix = f"results/model_runs/CB2{args.result_suffix}/{args.screen_name}/"
+    cb2_prefix = (
+        f"results/model_runs/CB2{args.result_suffix}/CB2_run_result.{args.screen_name}/"
+    )
 
     guide_info = pd.read_csv(guide_info_path).rename(
         columns={"Target gene/variant": "target_variant", "Group2": "target_group2"}
     )
-    target_info = (
-        guide_info[["target", "target_variant", "target_group2"]]
-        .drop_duplicates()
-        .set_index("target", drop=True)
-    )
-
-    if args.control == "splicing":
-        pos_idx = np.where(target_info["target_group2"] == "PosCtrl_inc")[0]
-        neg_idx = np.where(target_info["target_group2"] == "PosCtrl_dec")[0]
-    elif args.control == "strongest_splicing":
-        pos_idx = np.where(target_info["target_variant"] == "MYLIP")[0]
-        neg_idx = np.where(target_info["target_variant"] == "LDLR")[0]
-    else:
-        raise ValueError(
-            f"Invalid --control {args.control} provided. Use one of 'splicing' or 'strongest_splicing'."
-        )
-    ctrl_idx = np.where(target_info["target_group2"] == "NegCtrl")[0]
 
     def get_cols(bean_pattern, mageck_pattern, mageck_rra_pattern):
         return (
@@ -205,12 +194,40 @@ def main():
         f"results/model_runs/{args.screen_name}/all_scores{args.result_suffix}.csv"
     )
 
+    target_info = (
+        guide_info[["target", "target_variant", "target_group2"]]
+        .drop_duplicates()
+        .set_index("target", drop=True)
+    ).reindex(gene_order)
+    if args.control == "splicing":
+        pos_idx = np.where(target_info["target_group2"] == "PosCtrl_inc")[0]
+        neg_idx = np.where(target_info["target_group2"] == "PosCtrl_dec")[0]
+    elif args.control == "strongest_splicing":
+        pos_idx = np.where(target_info["target_variant"] == "MYLIP")[0]
+        neg_idx = np.where(target_info["target_variant"] == "LDLR")[0]
+    else:
+        raise ValueError(
+            f"Invalid --control {args.control} provided. Use one of 'splicing' or 'strongest_splicing'."
+        )
+    ctrl_idx = np.where(target_info["target_group2"] == "NegCtrl")[0]
+
     kwargs = {
         "res_tbl": all_results,
-        "z_cols": get_cols("mu_z_{}", "sort_num|z_{}_{}", "pos|lfc_rra_{}"),
-        "fdr_inc_cols": get_cols("fdr_inc_{}", "sort_num|fdr_{}_{}", "neg|fdr_rra_{}"),
-        "fdr_dec_cols": get_cols("fdr_dec_{}", "sort_num|fdr_{}_{}", "pos|fdr_rra_{}"),
-        "labels": model_ids + mageck_labels,
+        "z_cols": get_cols("mu_z_{}", "sort_num|z_{}_{}", "pos|lfc_rra_{}")
+        + ["logFC_CB2"],
+        "fdr_inc_cols": get_cols(
+            "fdr_inc_{}",
+            "sort_num|fdr_{}_{}",
+            "neg|fdr_rra_{}",
+        )
+        + ["fdr_pa_CB2"],
+        "fdr_dec_cols": get_cols(
+            "fdr_dec_{}",
+            "sort_num|fdr_{}_{}",
+            "pos|fdr_rra_{}",
+        )
+        + ["fdr_pb_CB2"],
+        "labels": model_ids + mageck_labels + ["CB2"],
         "pos_idx": pos_idx,
         "neg_idx": neg_idx,
         "ctrl_idx": ctrl_idx,
@@ -248,7 +265,7 @@ def main():
     perf_df.style.set_properties(**{"width": "px"}).background_gradient().to_excel(
         writer, sheet_name="metrics"
     )
-    writer.save()
+    writer.close()
 
 
 if __name__ == "__main__":
