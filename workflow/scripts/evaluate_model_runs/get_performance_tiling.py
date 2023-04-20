@@ -104,6 +104,15 @@ def get_cb2_results(cb2_prefix: str) -> Tuple[pd.DataFrame, List[str]]:
     return tbl.reset_index(), ["CB2"]
 
 
+def get_crisphiermix_results(
+    crisphiermix_prefix: str,
+) -> Tuple[pd.DataFrame, List[str]]:
+    res_path = f"{crisphiermix_prefix}/CRISPhieRmix_with_bcmatch.csv"
+    tbl = pd.read_csv(res_path).rename(columns={"gene": "variant"})
+    tbl = tbl.set_index("variant").add_suffix("_CRISPhieRmix").reset_index(drop=False)
+    return tbl.reset_index(), ["CRISPhieRmix"]
+
+
 def get_metrics(
     metric_fn, res_tbl, z_cols, fdr_cols, labels, pos_idx, ctrl_idx, **kwargs
 ):
@@ -186,10 +195,17 @@ def get_performances(
             "sort_num|z_{}",
             "pos|lfc_rra_{}",
         )
-        + [f"logFC_CB2{sfx}" for sfx in mageck_suffixes],
+        + [f"logFC_CB2{sfx}" for sfx in mageck_suffixes]
+        + [
+            f"score_CRISPhieRmix{sfx}" for sfx in mageck_suffixes
+        ],  # CRISPhieRmix doesn't have z-score output
         "fdr_cols": get_cols("fdr_dec_{}", "sort_num|fdr_{}", "pos|fdr_rra_{}")
-        + [f"fdr_ts_CB2{sfx}" for sfx in mageck_suffixes],
-        "labels": model_ids + mageck_labels + [f"CB2{sfx}" for sfx in mageck_suffixes],
+        + [f"fdr_ts_CB2{sfx}" for sfx in mageck_suffixes]
+        + [f"logfdr_CRISPhieRmix{sfx}" for sfx in mageck_suffixes],
+        "labels": model_ids
+        + mageck_labels
+        + [f"CB2{sfx}" for sfx in mageck_suffixes]
+        + [f"CRISPhieRmix{sfx}" for sfx in mageck_suffixes],
         "pos_idx": pos_idx,
         "ctrl_idx": ctrl_idx,
         "filter_sign": False,
@@ -245,13 +261,21 @@ def main():
         mageck_labels = [f"{m}_{annot_type}" for m in mageck_labels]
         all_mageck_labels += mageck_labels
         cb2_prefix = f"results/model_runs/CB2/CB2_run_result.{args.screen_name}.target_{annot_type}/"
+        cb2_prefix = f"results/model_runs/CRISPhieRmix/CRISPhieRmix_run_result.{args.screen_name}.target_{annot_type}/"
         cb2_results, cb2_labels = get_cb2_results(cb2_prefix)
+        crisphiermix_results, crisphiermix_labels = get_crisphiermix_results(
+            crisphiermix_prefix
+        )
         try:
-            cmp_results = bean_results.merge(
-                mageck_results,
-                on="variant",
-                how="inner",
-            ).merge(cb2_results, on="variant", how="inner")
+            cmp_results = (
+                bean_results.merge(
+                    mageck_results,
+                    on="variant",
+                    how="inner",
+                )
+                .merge(cb2_results, on="variant", how="inner")
+                .merge(crisphiermix_results, on="variant", how="inner")
+            )
         except:
             print(
                 bean_results.merge(
@@ -274,8 +298,16 @@ def main():
                 .reset_index(),
                 on="variant",
                 how="outer",
-            ).merge(
+            )
+            .merge(
                 cb2_results.set_index("variant")
+                .add_suffix(f"_{annot_type}")
+                .reset_index(),
+                on="variant",
+                how="outer",
+            )
+            .merge(
+                crisphiermix_results.set_index("variant")
                 .add_suffix(f"_{annot_type}")
                 .reset_index(),
                 on="variant",
@@ -288,8 +320,16 @@ def main():
                 .reset_index(),
                 on="variant",
                 how="outer",
-            ).merge(
+            )
+            .merge(
                 cb2_results.set_index("variant")
+                .add_suffix(f"_{annot_type}")
+                .reset_index(),
+                on="variant",
+                how="outer",
+            )
+            .merge(
+                crisphiermix_results.set_index("variant")
                 .add_suffix(f"_{annot_type}")
                 .reset_index(),
                 on="variant",
