@@ -29,35 +29,35 @@ def run_models(bdata_paths, provide_negctrl=False):
         )
         procs.append(p)
 
-        mageck_command = [
-            "sh",
-            "scripts/run_models/run_mageck_tiling.sh",
-            bdata_path,
-            f"results/model_runs/mageck{'_negctrl' if provide_negctrl else ''}",
-        ]
-        if provide_negctrl:
-            mageck_command += [
-                "--control-sgrna",
-                f"resources/gRNA_info/LDLRCDS_{'CBE' if 'CBE' in bdata_path else 'ABE'}_negctrl_gRNA.txt",
-            ]
-        p = subprocess.Popen(mageck_command)
-        procs.append(p)
+        # mageck_command = [
+        #     "sh",
+        #     "scripts/run_models/run_mageck_tiling.sh",
+        #     bdata_path,
+        #     f"results/model_runs/mageck{'_negctrl' if provide_negctrl else ''}",
+        # ]
+        # if provide_negctrl:
+        #     mageck_command += [
+        #         "--control-sgrna",
+        #         f"resources/gRNA_info/LDLRCDS_{'CBE' if 'CBE' in bdata_path else 'ABE'}_negctrl_gRNA.txt",
+        #     ]
+        # p = subprocess.Popen(mageck_command)
+        # procs.append(p)
 
-        if provide_negctrl:
-            p = subprocess.Popen(
-                [
-                    "sh",
-                    "scripts/run_models/run_CRISPhieRmix_tiling_negctrl.sh",
-                    f"{'CBE' if 'CBE' in bdata_path else 'ABE'} control",
-                ]
-            )
-        p = subprocess.Popen(
-            [
-                "sh",
-                "scripts/run_models/run_CB2_tiling.sh",
-                bdata_path,
-            ]
-        )
+        # if provide_negctrl:
+        #     p = subprocess.Popen(
+        #         [
+        #             "sh",
+        #             "scripts/run_models/run_CRISPhieRmix_tiling_negctrl.sh",
+        #             f"{'CBE' if 'CBE' in bdata_path else 'ABE'} control",
+        #         ]
+        #     )
+        # p = subprocess.Popen(
+        #     [
+        #         "sh",
+        #         "scripts/run_models/run_CB2_tiling.sh",
+        #         bdata_path,
+        #     ]
+        # )
         procs.append(p)
     for p in procs:
         p.wait()
@@ -67,11 +67,15 @@ def evaluate_model_runs(bdata_paths, used_negctrl=False):
     procs = []
     for bdata_path in bdata_paths:
         #        pass
+        sample_id = os.path.basename(bdata_path)
+        noallele_sample_id = sample_id.replace("_0.05_0.1", "").replace("_0.1_0.3", "")
         p = subprocess.Popen(
             [
                 "python",
                 "scripts/evaluate_model_runs/get_performance_tiling.py",
-                os.path.basename(bdata_path),
+                sample_id,
+                "--noallele-screen-name",
+                noallele_sample_id,
             ]
             + (["--result-suffix", "_negctrl"] if used_negctrl else [])
         )

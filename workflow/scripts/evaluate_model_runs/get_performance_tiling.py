@@ -24,7 +24,14 @@ def parse_args():
         type=str,
     )
     parser.add_argument("--result-suffix", type=str, default="")
-    return parser.parse_args()
+    parser.add_argument(
+        "--noallele-screen-name",
+        type=str,
+    )
+    args = parser.parse_args()
+    if not hasattr(args, "noallele_screen_name"):
+        args.noallele_screen_name = args.screen_name
+    return args
 
 
 def get_average_metric(df, pos_idx, neg_idx):
@@ -195,17 +202,15 @@ def get_performances(
             "sort_num|z_{}",
             "pos|lfc_rra_{}",
         )
-        + [f"logFC_CB2{sfx}" for sfx in mageck_suffixes]
-        + [
-            f"score_CRISPhieRmix{sfx}" for sfx in mageck_suffixes
-        ],  # CRISPhieRmix doesn't have z-score output
+        + [f"logFC_CB2{sfx}" for sfx in mageck_suffixes],
+        # + [
+        #     f"score_CRISPhieRmix{sfx}" for sfx in mageck_suffixes
+        # ],  # CRISPhieRmix doesn't have z-score output
         "fdr_cols": get_cols("fdr_dec_{}", "sort_num|fdr_{}", "pos|fdr_rra_{}")
-        + [f"fdr_ts_CB2{sfx}" for sfx in mageck_suffixes]
-        + [f"logfdr_CRISPhieRmix{sfx}" for sfx in mageck_suffixes],
-        "labels": model_ids
-        + mageck_labels
-        + [f"CB2{sfx}" for sfx in mageck_suffixes]
-        + [f"CRISPhieRmix{sfx}" for sfx in mageck_suffixes],
+        + [f"fdr_ts_CB2{sfx}" for sfx in mageck_suffixes],
+        # + [f"logfdr_CRISPhieRmix{sfx}" for sfx in mageck_suffixes],
+        "labels": model_ids + mageck_labels + [f"CB2{sfx}" for sfx in mageck_suffixes],
+        # + [f"CRISPhieRmix{sfx}" for sfx in mageck_suffixes],
         "pos_idx": pos_idx,
         "ctrl_idx": ctrl_idx,
         "filter_sign": False,
@@ -256,25 +261,24 @@ def main():
     all_mageck_labels = []
     # evaluate performance with splicing variants as positive controls, for common variant of pair of methods.
     for annot_type in ["allEdited", "behive"]:
-        mageck_prefix = f"results/model_runs/mageck{args.result_suffix}/{args.screen_name}.target_{annot_type}/"
+        mageck_prefix = f"results/model_runs/mageck{args.result_suffix}/{args.noallele_screen_name}.target_{annot_type}/"
         mageck_results, mageck_labels = get_mageck_results(mageck_prefix)
         mageck_labels = [f"{m}_{annot_type}" for m in mageck_labels]
         all_mageck_labels += mageck_labels
-        cb2_prefix = f"results/model_runs/CB2/CB2_run_result.{args.screen_name}.target_{annot_type}/"
-        cb2_prefix = f"results/model_runs/CRISPhieRmix/CRISPhieRmix_run_result.{args.screen_name}.target_{annot_type}/"
+        cb2_prefix = f"results/model_runs/CB2/CB2_run_result.{args.noallele_screen_name}.target_{annot_type}/"
+        criephier_prefix = f"results/model_runs/CRISPhieRmix/CRISPhieRmix_run_result.{args.noallele_screen_name}.target_{annot_type}/"
         cb2_results, cb2_labels = get_cb2_results(cb2_prefix)
-        crisphiermix_results, crisphiermix_labels = get_crisphiermix_results(
-            crisphiermix_prefix
-        )
+        # crisphiermix_results, crisphiermix_labels = get_crisphiermix_results(
+        #     crisphiermix_prefix
+        # )
         try:
             cmp_results = (
                 bean_results.merge(
                     mageck_results,
                     on="variant",
                     how="inner",
-                )
-                .merge(cb2_results, on="variant", how="inner")
-                .merge(crisphiermix_results, on="variant", how="inner")
+                ).merge(cb2_results, on="variant", how="inner")
+                # .merge(crisphiermix_results, on="variant", how="inner")
             )
         except:
             print(
@@ -298,21 +302,20 @@ def main():
                 .reset_index(),
                 on="variant",
                 how="outer",
-            )
-            .merge(
+            ).merge(
                 cb2_results.set_index("variant")
                 .add_suffix(f"_{annot_type}")
                 .reset_index(),
                 on="variant",
                 how="outer",
             )
-            .merge(
-                crisphiermix_results.set_index("variant")
-                .add_suffix(f"_{annot_type}")
-                .reset_index(),
-                on="variant",
-                how="outer",
-            )
+            # .merge(
+            #     crisphiermix_results.set_index("variant")
+            #     .add_suffix(f"_{annot_type}")
+            #     .reset_index(),
+            #     on="variant",
+            #     how="outer",
+            # )
             if all_results is None
             else all_results.merge(
                 mageck_results.set_index("variant")
@@ -320,21 +323,20 @@ def main():
                 .reset_index(),
                 on="variant",
                 how="outer",
-            )
-            .merge(
+            ).merge(
                 cb2_results.set_index("variant")
                 .add_suffix(f"_{annot_type}")
                 .reset_index(),
                 on="variant",
                 how="outer",
             )
-            .merge(
-                crisphiermix_results.set_index("variant")
-                .add_suffix(f"_{annot_type}")
-                .reset_index(),
-                on="variant",
-                how="outer",
-            )
+            # .merge(
+            #     crisphiermix_results.set_index("variant")
+            #     .add_suffix(f"_{annot_type}")
+            #     .reset_index(),
+            #     on="variant",
+            #     how="outer",
+            # )
         )
         for control in ["negctrl", "syn"]:
             perf_df = get_performances(
