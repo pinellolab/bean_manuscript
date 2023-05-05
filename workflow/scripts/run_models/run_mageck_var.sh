@@ -19,8 +19,8 @@ dm_sort=${mageck_path}/$(basename "${bdata_path}" .h5ad).mageck_dm_sort.txt
 
 if [ ! -f $mageck_outfile ] || [ ! -f $dm_topbot ] || [ ! -f $dm_sort ] || [ ! -f $sgrna_eff ]; then
     echo "Writing MAGeCK input files to " $mageck_path " ..."
-    mageck_outfile=$mageck_path/$(basename "${bdata_path}" .h5ad).bcmatch.mageck_input.txt
-    python scripts/run_models/make_mageck_input.py $bdata_path -p $mageck_path -m $mask_col --use_bcmatch 
+    mageck_outfile=$mageck_path/$(basename "${bdata_path}" .h5ad).no_bcmatch.mageck_input.txt
+    python scripts/run_models/make_mageck_input.py $bdata_path -p $mageck_path -m $mask_col 
 fi
 
 ## MAGeCK MLE

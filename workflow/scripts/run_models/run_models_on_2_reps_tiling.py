@@ -29,35 +29,35 @@ def run_models(bdata_paths, provide_negctrl=False):
         )
         procs.append(p)
 
-        # mageck_command = [
-        #     "sh",
-        #     "scripts/run_models/run_mageck_tiling.sh",
-        #     bdata_path,
-        #     f"results/model_runs/mageck{'_negctrl' if provide_negctrl else ''}",
-        # ]
-        # if provide_negctrl:
-        #     mageck_command += [
-        #         "--control-sgrna",
-        #         f"resources/gRNA_info/LDLRCDS_{'CBE' if 'CBE' in bdata_path else 'ABE'}_negctrl_gRNA.txt",
-        #     ]
-        # p = subprocess.Popen(mageck_command)
-        # procs.append(p)
+        mageck_command = [
+            "sh",
+            "scripts/run_models/run_mageck_tiling.sh",
+            bdata_path,
+            f"results/model_runs/mageck{'_negctrl' if provide_negctrl else ''}",
+        ]
+        if provide_negctrl:
+            mageck_command += [
+                "--control-sgrna",
+                f"resources/gRNA_info/LDLRCDS_{'CBE' if 'CBE' in bdata_path else 'ABE'}_negctrl_gRNA.txt",
+            ]
+        p = subprocess.Popen(mageck_command)
+        procs.append(p)
 
-        # if provide_negctrl:
-        #     p = subprocess.Popen(
-        #         [
-        #             "sh",
-        #             "scripts/run_models/run_CRISPhieRmix_tiling_negctrl.sh",
-        #             f"{'CBE' if 'CBE' in bdata_path else 'ABE'} control",
-        #         ]
-        #     )
-        # p = subprocess.Popen(
-        #     [
-        #         "sh",
-        #         "scripts/run_models/run_CB2_tiling.sh",
-        #         bdata_path,
-        #     ]
-        # )
+        if provide_negctrl:
+            p = subprocess.Popen(
+                [
+                    "sh",
+                    "scripts/run_models/run_CRISPhieRmix_tiling_negctrl.sh",
+                    f"{'CBE' if 'CBE' in bdata_path else 'ABE'} control",
+                ]
+            )
+        p = subprocess.Popen(
+            [
+                "sh",
+                "scripts/run_models/run_CB2_tiling.sh",
+                bdata_path,
+            ]
+        )
         procs.append(p)
     for p in procs:
         p.wait()

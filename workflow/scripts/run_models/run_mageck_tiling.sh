@@ -10,7 +10,7 @@ trailing_args=${@:3}
 
 # MAGeCK input file /PHShome/jr1025/projects/ANBE/mageck_results/
 for target_col in target_allEdited target_behive; do
-    mageck_path=${mageck_result_prefix}/${prefix}/$(basename "${bdata_path}" .h5ad).$target_col/
+    mageck_path=${mageck_result_prefix}/${prefix}/$(basename "${bdata_path}" .h5ad).no_bcmatch.$target_col/
     mkdir -p $mageck_path
     mageck_outfile=$mageck_path/$(basename "${bdata_path}" .h5ad).mageck_input.txt
     sgrna_eff=$mageck_path/$(basename "${bdata_path}" .h5ad).mageck_sgrna_eff.txt
@@ -21,8 +21,8 @@ for target_col in target_allEdited target_behive; do
 
     if [ ! -f $mageck_outfile ] || [ ! -f $dm_topbot ] || [ ! -f $dm_sort ] || [ ! -f $sgrna_eff ]; then
         echo "Writing MAGeCK input files to " $mageck_path " ..."
-        mageck_outfile=$mageck_path/$(basename "${bdata_path}" .h5ad).bcmatch.mageck_input.txt
-        python scripts/run_models/make_mageck_input.py $bdata_path -p $mageck_path -m $mask_col --use_bcmatch --target_col $target_col
+        mageck_outfile=$mageck_path/$(basename "${bdata_path}" .h5ad).mageck_input.txt
+        python scripts/run_models/make_mageck_input.py $bdata_path -p $mageck_path -m $mask_col --target_col $target_col
     fi
 
 

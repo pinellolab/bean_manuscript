@@ -49,6 +49,21 @@ counts <- counts[rownames(obs), ]
 var.top.bot <- subset(var, bin %in% c("top", "bot"))
 
 counts <- counts[, rownames(var.top.bot)]
+##============
+counts_bcmatch <- adata$layers$X_bcmatch
+rownames(counts_bcmatch) <- rownames(obs)
+colnames(counts_bcmatch) <- rownames(var)
+
+# select top and bottom samples
+var.top.bot2 <- subset(var, bin %in% c("top", "bot"))
+counts_bcmatch <- counts_bcmatch[, rownames(var.top.bot2)]
+
+rownames(var.top.bot2) <- paste0("bcmatch_", rownames(var.top.bot2))
+colnames(counts_bcmatch) <- paste0("bcmatch_", colnames(counts_bcmatch))
+
+counts <- cbind(counts, counts_bcmatch)
+var.top.bot <- rbind(var.top.bot, var.top.bot2)
+
 
 dds <- DESeqDataSetFromMatrix(countData = counts,
                               colData = var.top.bot,
@@ -78,7 +93,7 @@ df <- data.frame(gene = log2fcCRISPhieRmixFit$genes,
 
 df$locfdr[which(df$locfdr < 0)] = 0
 
-write.csv(df, glue::glue("{opt$output}/CRISPhieRmix_target_allEdited.csv"))
+write.csv(df, glue::glue("{opt$output}/CRISPhieRmix_bcmatch_target_allEdited.csv"))
 ############################################################################
 
 
@@ -99,6 +114,22 @@ counts <- counts[rownames(obs), ]
 var.top.bot <- subset(var, bin %in% c("top", "bot"))
 
 counts <- counts[, rownames(var.top.bot)]
+
+##============
+counts_bcmatch <- adata$layers$X_bcmatch
+rownames(counts_bcmatch) <- rownames(obs)
+colnames(counts_bcmatch) <- rownames(var)
+
+# select top and bottom samples
+var.top.bot2 <- subset(var, bin %in% c("top", "bot"))
+counts_bcmatch <- counts_bcmatch[, rownames(var.top.bot2)]
+
+rownames(var.top.bot2) <- paste0("bcmatch_", rownames(var.top.bot2))
+colnames(counts_bcmatch) <- paste0("bcmatch_", colnames(counts_bcmatch))
+
+counts <- cbind(counts, counts_bcmatch)
+var.top.bot <- rbind(var.top.bot, var.top.bot2)
+
 
 dds <- DESeqDataSetFromMatrix(countData = counts,
                               colData = var.top.bot,
@@ -127,4 +158,4 @@ df <- data.frame(gene = log2fcCRISPhieRmixFit$genes,
                  score = log2fcCRISPhieRmixFit$genePosterior)
 
 df$locfdr[which(df$locfdr < 0)] = 0
-write.csv(df, glue::glue("{opt$output}/CRISPhieRmix_target_behive.csv"))
+write.csv(df, glue::glue("{opt$output}/CRISPhieRmix_bcmatch_target_behive.csv"))
