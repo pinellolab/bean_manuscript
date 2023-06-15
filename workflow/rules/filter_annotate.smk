@@ -71,7 +71,7 @@ rule annotate_tiling:
         output_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_annotated{cutoff_suffix}.h5ad',
     run:
         shell("python scripts/filter_annotate/assign_guide_to_outcome.py both {input.input_h5ad} {output.output_h5ad} -s {input.splice_sites} -p {input.behive_pred} --write-bdata --control-guide-tag ABE_CONTROL")
-        shell("python scripts/run_models/add_quantiles.py {input.output_h5ad} {output.output_h5ad}")
+        shell("python scripts/run_models/add_quantiles.py {output.output_h5ad} {output.output_h5ad}")
 
 rule annotate_tiling_CBEs:
     input:
