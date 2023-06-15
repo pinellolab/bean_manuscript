@@ -14,26 +14,26 @@ rule filter_annotate_cds_alleles:
         input_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_masked.h5ad',
         plasmid_h5ad='results/mapped/LDLRCDS/bean_count_LDLRCDS_plasmid.h5ad'
     params:
-        output_prefix='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.05_0.1'
+        output_prefix='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.1_0.3'
     output:
-        output_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.05_0.1.h5ad',
-        output_filter_stats='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.05_0.1.filtered_allele_stats.pdf',
-        output_filter_log='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.05_0.1.filter_log.txt',
+        output_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.1_0.3.h5ad',
+        output_filter_stats='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.1_0.3.filtered_allele_stats.pdf',
+        output_filter_log='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.1_0.3.filter_log.txt',
     run:
-        shell("bean-filter {input.input_h5ad} -o {params.output_prefix} -p {input.plasmid_h5ad} -s 2 -e 7 -w -b -t -ap 0.05 -sp 0.1")
+        shell("bean-filter {input.input_h5ad} -o {params.output_prefix} -p {input.plasmid_h5ad} -s 2 -e 7 -w -b -t -ap 0.1 -sp 0.1")
 
 rule filter_annotate_cds_alleles_CBE:
     input:
         input_h5ad='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_masked.h5ad',
         plasmid_h5ad='results/mapped/LDLRCDS/bean_count_LDLRCDS_plasmid.h5ad'
     params:
-        output_prefix='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_alleleFiltered'
+        output_prefix='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_alleleFiltered{cutoff_suffix}'
     output:
-        output_h5ad='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_alleleFiltered.h5ad',
-        output_filter_stats='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_alleleFiltered.filtered_allele_stats.pdf',
-        output_filter_log='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_alleleFiltered.filter_log.txt',
+        output_h5ad='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_alleleFiltered{cutoff_suffix}.h5ad',
+        output_filter_stats='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_alleleFiltered.filtered_allele_stats{cutoff_suffix}.pdf',
+        output_filter_log='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_alleleFiltered{cutoff_suffix}.filter_log.txt',
     run:
-        shell("bean-filter {input.input_h5ad} -o {params.output_prefix} -p {input.plasmid_h5ad} -s 3 -e 8 -w -b -t -ap 0.05 -sp 0.1 ")
+        shell("bean-filter {input.input_h5ad} -o {params.output_prefix} -p {input.plasmid_h5ad} -s 3 -e 8 -w -b -t -ap 0.1 -sp 0.3 ")
 
 rule annotate_var:
     input:
@@ -41,15 +41,15 @@ rule annotate_var:
     output:
         output_h5ad='results/filtered_annotated/LDLvar/bean_count_LDLvar_annotated.h5ad',
     run:
-        shell("python scripts/run_models/add_quantiles.py {input.input_h5ad} {output.output_h5ad} {output.output_complete_h5ad}")
+        shell("python scripts/run_models/add_quantiles.py {input.input_h5ad} {output.output_h5ad}")
 
-rule subset_screen_data:
+rule subset_complete_reps:
     input:
-        input_h5ad='results/filtered_annotated/{library}/bean_count_{library}_annotated.h5ad'
+        input_h5ad='results/filtered_annotated/{library}/bean_count_{library}_annotated{cutoff_suffix}.h5ad'
     output:
-        output_h5ad='results/filtered_annotated/{library}/bean_count_{library}_annotated_complete.h5ad',
+        output_h5ad='results/filtered_annotated/{library}/bean_count_{library}_annotated{cutoff_suffix}_complete.h5ad',
     run:
-        shell("python scripts/run_models/subset_complete_reps.py {input.input_h5ad} {output.output_h5ad} {output.output_complete_h5ad}")
+        shell("python scripts/run_models/subset_complete_reps.py {input.input_h5ad} {output.output_h5ad}")
 
 rule get_targetable_splice_pos:
     input:
@@ -65,22 +65,23 @@ rule annotate_tiling:
         behive_pred='resources/gRNA_info/target_prediction/LDLR-ABE_BEHive_consequence.xlsx',
         behive_ctrl_pred='resources/gRNA_info/target_prediction/control_gRNA_BEHive_consequence.csv',
         splice_sites='resources/LDLR/LDLR_ABE_splice_targets.csv'
+    wildcard_constraints:
+        cutoff_suffix="_[.\d]+_[.\d]+"
     output:
         output_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_annotated{cutoff_suffix}.h5ad',
-        output_complete_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_annotated{cutoff_suffix}_complete.h5ad',
     run:
         shell("python scripts/filter_annotate/assign_guide_to_outcome.py both {input.input_h5ad} {output.output_h5ad} -s {input.splice_sites} -p {input.behive_pred} --write-bdata --control-guide-tag ABE_CONTROL")
-        shell("python scripts/run_models/add_quantiles.py {input.output_h5ad} {output.output_h5ad} {output.complete_h5ad}")
+        shell("python scripts/run_models/add_quantiles.py {input.output_h5ad} {output.output_h5ad}")
 
 rule annotate_tiling_CBEs:
     input:
-        input_h5ad='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_alleleFiltered.h5ad',
+        input_h5ad='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_alleleFiltered{cutoff_suffix}.h5ad',
         behive_pred='resources/gRNA_info/target_prediction/LDLR-CBE_BEHive_consequence.csv',
         splice_sites='resources/LDLR/LDLR_CBE_splice_targets.csv'
     output:
-        output_h5ad='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_annotated.h5ad',
+        output_h5ad='results/filtered_annotated/LDLRCDS_CBE_{cas_enzyme}/bean_count_LDLRCDS_CBE_{cas_enzyme}_annotated{cutoff_suffix}.h5ad',
     run:
-        shell("python scripts/filter_annotate/assign_guide_to_outcome.py both {input.input_h5ad} {output.output_h5ad} -s {input.splice_sites} -p {input.behive_pred} --write-bdata --control-guide-tag CBE_CONTROL --cbe")
+        shell("python scripts/filter_annotate/assign_guide_to_outcome.py all {input.input_h5ad} {output.output_h5ad} -s {input.splice_sites} -p {input.behive_pred} --write-bdata --control-guide-tag CBE_CONTROL")
         shell("python scripts/run_models/add_quantiles.py {output.output_h5ad} {output.output_h5ad}")
 
 
