@@ -82,9 +82,9 @@ rule run_cb2:
     input:
         input_h5ad="results/filtered_annotated/LDLvar/bean_count_LDLvar_annotated_complete.h5ad"
     output:
-        cb2_out="results/model_runs/CB2/CB2_run_result.bean_count_LDLvar_annotated_complete/CB2_with_bcmatch_gene.csv",
+        cb2_out="results/model_runs/CB2/CB2_run_result.bean_count_LDLvar_annotated_complete/CB2_gene.csv",
     run:
-        shell("sh scripts/run_models/run_CB2_var.sh {input.input_h5ad}")
+        shell("conda run -n anbe_benchmark sh scripts/run_models/run_CB2_var.sh {input.input_h5ad}")
         
 
 rule evaluate_varscreen:
@@ -286,64 +286,65 @@ rule run_crisphieRmix_tiling_negctrl:
     params:
         control_label=lambda wildcards: "CBE control" if "CBE" in wildcards.tiling_lib else "ABE control"
     output:
-        crisphiermix_out="results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{tiling_lib}_annotated_complete/CRISPhieRmix_bcmatch_target_behive.csv",
-        crisphiermix_out_all="results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{tiling_lib}_annotated_complete/CRISPhieRmix_bcmatch_target_allEdited.csv",
+        crisphiermix_out="results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{tiling_lib}_annotated_complete.target_behive/CRISPhieRmix.csv",
+        crisphiermix_out_all="results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{tiling_lib}_annotated_complete.target_allEdited/CRISPhieRmix.csv",
     run:
-        shell("sh scripts/run_models/run_CRISPhieRmix_tiling_negctrl.sh {input.input_h5ad} {params.control_label}")
+        shell('mkdir -p results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{wildcards.tiling_lib}_annotated_complete.target_behive/; mkdir -p results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{wildcards.tiling_lib}_annotated_complete.target_allEdited/;  conda run -n anbe_benchmark Rscript scripts/run_models/run_CRISPhieRmix_LDLRCDS.R -i {input.input_h5ad} -o results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{wildcards.tiling_lib}_annotated_complete')
+        #shell("conda run -n anbe_benchmark sh scripts/run_models/run_CRISPhieRmix_tiling_negctrl.sh {input.input_h5ad} {params.control_label}")
 
-rule evaluate_tiling:
-    input:
-        mle_out_all="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_allEdited/sort.gene_summary.txt",
-        mle_out_pred="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_behive/sort.gene_summary.txt",
-        mle_var_out_all="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_allEdited/sort_var.gene_summary.txt",
-        mle_var_out_pred="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_behive/sort_var.gene_summary.txt",
-        rra_out_all="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_allEdited/rra_top.gene_summary.txt",
-        rra_out_pred="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_behive/rra_top.gene_summary.txt",
-        rra_bot_out_all="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_allEdited/rra_bot.gene_summary.txt",
-        rra_bot_out_pred="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_behive/rra_bot.gene_summary.txt",
-        mixnormal_res="results/model_runs/bean/bean_run_result.bean_count_{tiling_lib}_annotated{cutoff_suffix}/bean_element_result.MultiMixtureNormal.csv",
-        mixnormal_acc_res="results/model_runs/bean/bean_run_result.bean_count_{tiling_lib}_annotated{cutoff_suffix}/bean_element_result.MultiMixtureNormal+Acc.csv",
-    params:
-        bean_prefix="results/model_runs/bean/bean_count_{tiling_lib}_annotated{cutoff_suffix}",
-        mageck_prefix="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}/",
-    output:
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/allEdited_negctrl.metrics.csv",
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/allEdited_syn.metrics.csv",
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/behive_negctrl.metrics.csv",
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/behive_syn.metrics.csv",
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/clinvar_pb.metrics.csv",
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/clinvar_plpb.metrics.csv",
-    run:
-        shell("python scripts/evaluate_model_runs/get_performance_tiling.py bean_count_{wildcards.tiling_lib}_annotated{wildcards.cutoff_suffix}")
+# rule evaluate_tiling:
+#     input:
+#         mle_out_all="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_allEdited/sort.gene_summary.txt",
+#         mle_out_pred="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_behive/sort.gene_summary.txt",
+#         mle_var_out_all="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_allEdited/sort_var.gene_summary.txt",
+#         mle_var_out_pred="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_behive/sort_var.gene_summary.txt",
+#         rra_out_all="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_allEdited/rra_top.gene_summary.txt",
+#         rra_out_pred="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_behive/rra_top.gene_summary.txt",
+#         rra_bot_out_all="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_allEdited/rra_bot.gene_summary.txt",
+#         rra_bot_out_pred="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}.target_behive/rra_bot.gene_summary.txt",
+#         mixnormal_res="results/model_runs/bean/bean_run_result.bean_count_{tiling_lib}_annotated{cutoff_suffix}/bean_element_result.MultiMixtureNormal.csv",
+#         mixnormal_acc_res="results/model_runs/bean/bean_run_result.bean_count_{tiling_lib}_annotated{cutoff_suffix}/bean_element_result.MultiMixtureNormal+Acc.csv",
+#     params:
+#         bean_prefix="results/model_runs/bean/bean_count_{tiling_lib}_annotated{cutoff_suffix}",
+#         mageck_prefix="results/model_runs/mageck/bean_count_{tiling_lib}_annotated{cutoff_suffix}/",
+#     output:
+#         "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/allEdited_negctrl.metrics.csv",
+#         "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/allEdited_syn.metrics.csv",
+#         "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/behive_negctrl.metrics.csv",
+#         "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/behive_syn.metrics.csv",
+#         "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/clinvar_pb.metrics.csv",
+#         "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/clinvar_plpb.metrics.csv",
+#     run:
+#         shell("python scripts/evaluate_model_runs/get_performance_tiling.py bean_count_{wildcards.tiling_lib}_annotated{wildcards.cutoff_suffix}")
 
 rule evaluate_tiling_negctrl:
     input:
-        mle_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_allEdited/sort.gene_summary.txt",
-        mle_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_behive/sort.gene_summary.txt",
-        mle_var_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_allEdited/sort_var.gene_summary.txt",
-        mle_var_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_behive/sort_var.gene_summary.txt",
-        rra_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_allEdited/rra_top.gene_summary.txt",
-        rra_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_behive/rra_top.gene_summary.txt",
-        rra_bot_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_allEdited/rra_bot.gene_summary.txt",
-        rra_bot_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_behive/rra_bot.gene_summary.txt",
+        mle_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_allEdited/sort.gene_summary.txt",
+        mle_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_behive/sort.gene_summary.txt",
+        mle_var_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_allEdited/sort_var.gene_summary.txt",
+        mle_var_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_behive/sort_var.gene_summary.txt",
+        rra_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_allEdited/rra_top.gene_summary.txt",
+        rra_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_behive/rra_top.gene_summary.txt",
+        rra_bot_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_allEdited/rra_bot.gene_summary.txt",
+        rra_bot_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_behive/rra_bot.gene_summary.txt",
         normal_res_all="results/model_runs/bean_negctrl/bean_run_result.bean_count_{tiling_lib}_annotated_complete/bean_element_result.Normal_allEdited.csv",
         normal_res_pred="results/model_runs/bean_negctrl/bean_run_result.bean_count_{tiling_lib}_annotated_complete/bean_element_result.Normal_behive.csv",
         mixnormal_res="results/model_runs/bean_negctrl/bean_run_result.bean_count_{tiling_lib}_annotated{cutoff_suffix}_complete/bean_element_result.MultiMixtureNormal.csv",
         mixnormal_acc_res="results/model_runs/bean_negctrl/bean_run_result.bean_count_{tiling_lib}_annotated{cutoff_suffix}_complete/bean_element_result.MultiMixtureNormal+Acc.csv",
-        crisphiermix_res_all="results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{tiling_lib}_annotated_complete/CRISPhieRmix_bcmatch_target_allEdited.csv",
-        crisphiermix_res_behive="results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{tiling_lib}_annotated_complete/CRISPhieRmix_bcmatch_target_behive.csv",
-        cb2_out_all="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated_complete.target_allEdited/CB2_with_bcmatch_gene.csv",
-        cb2_out_pred="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated_complete.target_behive/CB2_with_bcmatch_gene.csv",
+        crisphiermix_res_all="results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{tiling_lib}_annotated_complete.target_allEdited/CRISPhieRmix.csv",
+        crisphiermix_res_behive="results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.bean_count_{tiling_lib}_annotated_complete.target_behive/CRISPhieRmix.csv",
+        cb2_out_all="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated_complete.target_allEdited/CB2_gene.csv",
+        cb2_out_pred="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated_complete.target_behive/CB2_gene.csv",
     params:
-        bean_prefix="results/model_runs/bean_negctrl/bean_count_{tiling_lib}_annotated{cutoff_suffix}/",
-        mageck_prefix="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated/",
+        bean_prefix="results/model_runs/bean_negctrl/bean_count_{tiling_lib}_annotated{cutoff_suffix}_complete/",
+        mageck_prefix="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete/",
     output:
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/allEdited_negctrl_negctrl.metrics.csv",
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/allEdited_syn_negctrl.metrics.csv",
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/behive_negctrl_negctrl.metrics.csv",
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/behive_syn_negctrl.metrics.csv",
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/clinvar_pb_negctrl.metrics.csv",
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}/clinvar_plpb_negctrl.metrics.csv",
+        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}_complete/allEdited_negctrl_negctrl.metrics.csv",
+        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}_complete/allEdited_syn_negctrl.metrics.csv",
+        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}_complete/behive_negctrl_negctrl.metrics.csv",
+        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}_complete/behive_syn_negctrl.metrics.csv",
+        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}_complete/clinvar_pb_negctrl.metrics.csv",
+        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}_complete/clinvar_plpb_negctrl.metrics.csv",
     run:
         shell("python scripts/evaluate_model_runs/get_performance_tiling.py bean_count_{wildcards.tiling_lib}_annotated{wildcards.cutoff_suffix}_complete --result-suffix _negctrl --noallele-screen-name bean_count_{wildcards.tiling_lib}_annotated_complete")
 
@@ -357,8 +358,8 @@ rule evaluate_tiling_negctrl:
 
 rule run_2reps_tiling_negctrl:
     input:
-        input_h5ad="results/filtered_annotated/{tiling_lib}/bean_count_{tiling_lib}_annotated{cutoff_suffix}.h5ad"
+        input_h5ad="results/filtered_annotated/{tiling_lib}/bean_count_{tiling_lib}_annotated{cutoff_suffix}_complete.h5ad"
     output:
-        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}_rep3_rep4/all_scores_negctrl.csv"
+        "results/model_runs/bean_count_{tiling_lib}_annotated{cutoff_suffix}_complete_rep3_rep4/all_scores_negctrl.csv"
     run:
         shell("python scripts/run_models/run_models_on_2_reps_tiling.py {input.input_h5ad} --use-negctrl ")
