@@ -137,9 +137,9 @@ rule evaluate_varscreen:
 
 rule run_2reps_varscreen:
     input:
-        input_h5ad="results/filtered_annotated/LDLvar/bean_count_LDLvar_annotated.h5ad"
+        input_h5ad="results/filtered_annotated/LDLvar/bean_count_LDLvar_annotated_complete.h5ad"
     output:
-        "results/model_runs/bean_count_LDLvar_annotated_rep14_rep15/all_scores.csv"
+        "results/model_runs/bean_count_LDLvar_annotated_complete_rep14_rep15/all_scores.csv"
     run:
         shell("python scripts/run_models/run_models_on_2_reps.py {input.input_h5ad}")
 
