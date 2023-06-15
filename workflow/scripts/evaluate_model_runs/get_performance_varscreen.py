@@ -91,7 +91,7 @@ def get_mageck_results(mageck_prefix: str, gene_order: Sequence[str]):
 def get_cb2_results(
     cb2_prefix: str, gene_order: Sequence[str]
 ) -> Tuple[pd.DataFrame, List[str]]:
-    res_path = f"{cb2_prefix}/CB2_with_bcmatch_gene.csv"
+    res_path = f"{cb2_prefix}/CB2_gene.csv"
     tbl = pd.read_csv(res_path).set_index("gene").reindex(gene_order)
     tbl = tbl.add_suffix("_CB2")
     return tbl.reset_index(), ["CB2"]

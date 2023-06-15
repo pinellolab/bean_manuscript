@@ -105,7 +105,7 @@ def get_mageck_results(mageck_prefix):
 
 
 def get_cb2_results(cb2_prefix: str) -> Tuple[pd.DataFrame, List[str]]:
-    res_path = f"{cb2_prefix}/CB2_with_bcmatch_gene.csv"
+    res_path = f"{cb2_prefix}/CB2_gene.csv"
     tbl = pd.read_csv(res_path).rename(columns={"gene": "variant"})
     tbl = tbl.set_index("variant").add_suffix("_CB2").reset_index(drop=False)
     return tbl.reset_index(), ["CB2"]
@@ -114,7 +114,7 @@ def get_cb2_results(cb2_prefix: str) -> Tuple[pd.DataFrame, List[str]]:
 def get_crisphiermix_results(
     crisphiermix_prefix: str,
 ) -> Tuple[pd.DataFrame, List[str]]:
-    res_path = f"{crisphiermix_prefix}/CRISPhieRmix_with_bcmatch.csv"
+    res_path = f"{crisphiermix_prefix}/CRISPhieRmix.csv"
     tbl = pd.read_csv(res_path).rename(columns={"gene": "variant"})
     tbl = tbl.set_index("variant").add_suffix("_CRISPhieRmix").reset_index(drop=False)
     return tbl.reset_index(), ["CRISPhieRmix"]

@@ -260,14 +260,14 @@ rule run_mageck_tiling_negctrl:
     input:
         input_h5ad="results/filtered_annotated/{tiling_lib}/bean_count_{tiling_lib}_annotated_complete.h5ad"
     output:
-        mle_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_allEdited/sort.gene_summary.txt",
-        mle_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_behive/sort.gene_summary.txt",
-        mle_var_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_allEdited/sort_var.gene_summary.txt",
-        mle_var_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_behive/sort_var.gene_summary.txt",
-        rra_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_allEdited/rra_top.gene_summary.txt",
-        rra_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_behive/rra_top.gene_summary.txt",
-        rra_bot_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_allEdited/rra_bot.gene_summary.txt",
-        rra_bot_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.target_behive/rra_bot.gene_summary.txt",
+        mle_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_allEdited/sort.gene_summary.txt",
+        mle_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_behive/sort.gene_summary.txt",
+        mle_var_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_allEdited/sort_var.gene_summary.txt",
+        mle_var_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_behive/sort_var.gene_summary.txt",
+        rra_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_allEdited/rra_top.gene_summary.txt",
+        rra_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_behive/rra_top.gene_summary.txt",
+        rra_bot_out_all="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_allEdited/rra_bot.gene_summary.txt",
+        rra_bot_out_pred="results/model_runs/mageck_negctrl/bean_count_{tiling_lib}_annotated_complete.no_bcmatch.target_behive/rra_bot.gene_summary.txt",
     run:
         shell("sh scripts/run_models/run_mageck_tiling.sh {input.input_h5ad} results/model_runs/mageck_negctrl/ --negctrl")
 
@@ -275,10 +275,10 @@ rule run_cb2_tiling:
     input:
         input_h5ad="results/filtered_annotated/{tiling_lib}/bean_count_{tiling_lib}_annotated_complete.h5ad"
     output:
-        cb2_out_all="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated_complete.target_allEdited/CB2_with_bcmatch_gene.csv",
-        cb2_out_pred="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated_complete.target_behive/CB2_with_bcmatch_gene.csv",
+        cb2_out_all="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated_complete.target_allEdited/CB2_gene.csv",
+        cb2_out_pred="results/model_runs/CB2/CB2_run_result.bean_count_{tiling_lib}_annotated_complete.target_behive/CB2_gene.csv",
     run:
-        shell("sh scripts/run_models/run_CB2_tiling.sh {input.input_h5ad}")
+        shell("conda run -n anbe_benchmark sh scripts/run_models/run_CB2_tiling.sh {input.input_h5ad}")
 
 rule run_crisphieRmix_tiling_negctrl:
     input:
