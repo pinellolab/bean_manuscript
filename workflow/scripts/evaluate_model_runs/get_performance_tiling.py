@@ -28,6 +28,11 @@ def parse_args():
         "--noallele-screen-name",
         type=str,
     )
+    parser.add_argument(
+        "--compare-with-alleleFiltered",
+        action="store_true",
+        help="compare with allele-filtered bdata",
+    )
     args = parser.parse_args()
     if not hasattr(args, "noallele_screen_name"):
         args.noallele_screen_name = args.screen_name
