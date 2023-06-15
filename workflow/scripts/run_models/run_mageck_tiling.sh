@@ -27,8 +27,9 @@ for target_col in target_allEdited target_behive; do
 
 
     ## MAGeCK MLE
-    echo "Submitting MAGeCK runs..."
+
     if [ ! -f $mageck_path/topbot.gene_summary.txt ]; then
+        echo "Submitting MAGeCK runs..."
         mageck mle -k $mageck_outfile -d $dm_topbot -n $mageck_path/topbot --threads=1 &
         pids+=($!)
     fi

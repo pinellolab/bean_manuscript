@@ -93,7 +93,10 @@ def _format_behive_edit(edit_string: str):
 
 
 def format_behive(behive_pred_path: str) -> pd.DataFrame:
-    behive_pred = pd.read_excel(behive_pred_path)
+    if behive_pred_path.endswith(".xlsx"):
+        behive_pred = pd.read_excel(behive_pred_path)
+    else:
+        behive_pred = pd.read_csv(behive_pred_path)
     behive_pred["edit_str"] = behive_pred.apply(
         lambda row: row.aa_str if isinstance(row.aa_str, str) else row.variant_str,
         axis=1,

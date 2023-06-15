@@ -94,11 +94,6 @@ if [ $rerun ] || [ ! -f "$mageck_path/rra_bot.gene_summary.txt" ]; then
     pids+=($!)
 fi
 
-## CRISPhieRmix
-
-## ACE
-
-## BAGEL
 
 for pid in ${pids[*]}; do
     wait $pid

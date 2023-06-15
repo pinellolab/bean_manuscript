@@ -28,7 +28,7 @@ option_list = list(
 )
 
 
-get_results <- function(counts, colData, obs){
+get_results <- function(counts, colData, obs, target_col = "target_allEdited"){
     dds <- DESeqDataSetFromMatrix(countData = counts,
                                   colData = var.top.bot,
                                   design = ~ bin)
@@ -40,11 +40,11 @@ get_results <- function(counts, colData, obs){
     # set log2fc to zero if for NAN
     log2fc[is.na(log2fc)] <- 0.0
     
-    negCtrl = log2fc[which(obs$Group == "ABE control" | obs$Group == "CBE control")]
-    log2fc = log2fc[-which(obs$Group == "ABE control" | obs$Group == "CBE control")]
+    negCtrl = log2fc[which(obs$Group == "ABE control")]
+    log2fc = log2fc[-which(obs$Group == "ABE control")]
     
     #geneIds = rownames(obs)[-which(obs$Group == "ABE control" | obs$Group == "CBE control")]
-    geneIds = obs$target_allEdited[-which(obs$Group == "ABE control" | obs$Group == "CBE control")]
+    geneIds = obs[-which(obs$Group == "ABE control"), target_col]
     geneIds = factor(geneIds, levels = unique(geneIds))
     
     
@@ -83,9 +83,9 @@ counts <- counts[rownames(obs), ]
 # select top and bottom samples
 var.top.bot <- subset(var, bin %in% c("top", "bot"))
 counts <- counts[, rownames(var.top.bot)]
-df <- get_results(counts, var.top.bot, obs)
+df <- d(counts, var.top.bot, obs)
 
-write.csv(df, glue::glue("{opt$output}/CRISPhieRmix_target_allEdited.csv"))
+write.csv(df, glue::glue("{opt$output}.target_allEdited/CRISPhieRmix.csv"))
 
 # assess gene-level significance for each target in target_allEdited column
 # combined with x_bcmatch
@@ -111,8 +111,8 @@ colnames(counts_bcmatch) <- paste0("bcmatch_", colnames(counts_bcmatch))
 counts <- cbind(counts, counts_bcmatch)
 var.top.bot <- rbind(var.top.bot, var.top.bot2)
 
-df <- get_results(counts, var.top.bot, obs)
-write.csv(df, glue::glue("{opt$output}/CRISPhieRmix_target_allEdited_with_bcmatch.csv"))
+df <- d(counts, var.top.bot, obs)
+write.csv(df, glue::glue("{opt$output}.target_allEdited/CRISPhieRmix_with_bcmatch.csv"))
 ############################################################################
 
 
@@ -132,8 +132,8 @@ counts <- counts[rownames(obs), ]
 # select top and bottom samples
 var.top.bot <- subset(var, bin %in% c("top", "bot"))
 counts <- counts[, rownames(var.top.bot)]
-df <- get_results(counts, var.top.bot, obs)
-write.csv(df, glue::glue("{opt$output}/CRISPhieRmix_target_behive.csv"))
+df <- d(counts, var.top.bot, obs, "target_behive")
+write.csv(df, glue::glue("{opt$output}.target_behive/CRISPhieRmix.csv"))
 
 
 # assess gene-level significance for each target in target_behive column
@@ -160,5 +160,5 @@ colnames(counts_bcmatch) <- paste0("bcmatch_", colnames(counts_bcmatch))
 counts <- cbind(counts, counts_bcmatch)
 var.top.bot <- rbind(var.top.bot, var.top.bot2)
 
-df <- get_results(counts, var.top.bot, obs)
-write.csv(df, glue::glue("{opt$output}/CRISPhieRmix_target_behive_with_bcmatch.csv"))
+df <- get_results(counts, var.top.bot, obs, "target_behive")
+write.csv(df, glue::glue("{opt$output}.target_behive/CRISPhieRmix_with_bcmatch.csv"))

@@ -46,13 +46,22 @@ def run_models(bdata_paths, provide_negctrl=False):
         if provide_negctrl:
             p = subprocess.Popen(
                 [
+                    "conda",
+                    "run",
+                    "-n",
+                    "anbe_benchmark",
                     "sh",
                     "scripts/run_models/run_CRISPhieRmix_tiling_negctrl.sh",
-                    f"{'CBE' if 'CBE' in bdata_path else 'ABE'} control",
+                    bdata_path,
+                    # f"{'CBE' if 'CBE' in bdata_path else 'ABE'} control",
                 ]
             )
         p = subprocess.Popen(
             [
+                "conda",
+                "run",
+                "-n",
+                "anbe_benchmark",
                 "sh",
                 "scripts/run_models/run_CB2_tiling.sh",
                 bdata_path,
@@ -76,6 +85,7 @@ def evaluate_model_runs(bdata_paths, used_negctrl=False):
                 sample_id,
                 "--noallele-screen-name",
                 noallele_sample_id,
+                "--compare-with-alleleFiltered",
             ]
             + (["--result-suffix", "_negctrl"] if used_negctrl else [])
         )

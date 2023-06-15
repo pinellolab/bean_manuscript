@@ -31,7 +31,17 @@ def run_models(bdata_paths):
             ]
         )
         procs.append(p)
-        p = subprocess.Popen(["sh", "scripts/run_models/run_CB2_var.sh", bdata_path])
+        p = subprocess.Popen(
+            [
+                "conda",
+                "run",
+                "-n",
+                "anbe_benchmark",
+                "sh",
+                "scripts/run_models/run_CB2_var.sh",
+                bdata_path,
+            ]
+        )
         procs.append(p)
     for p in procs:
         p.wait()

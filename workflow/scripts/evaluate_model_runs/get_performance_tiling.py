@@ -40,10 +40,18 @@ def get_average_metric(df, pos_idx, neg_idx):
     )
 
 
-def get_bean_results(result_path_format):
+def get_bean_results(result_path_format, compare_with_alleleFiltered=False):
     res_tbl = None
     for model_id in model_ids:
-        tbl = pd.read_csv(result_path_format.format(model_id))
+        if "Mixture" not in model_id and (not compare_with_alleleFiltered):
+            result_path_format_use = result_path_format.replace("_0.1_0.3", "").replace(
+                "_0.05_0.1", ""
+            )
+        else:
+            result_path_format_use = result_path_format
+        tbl = pd.read_csv(result_path_format_use.format(model_id))
+        # TODO: this is temporary
+
         if "edit" not in tbl.columns:
             cols = tbl.columns.tolist()
             if cols[1].startswith("target_"):
@@ -52,7 +60,7 @@ def get_bean_results(result_path_format):
                 cols[0] = "edit"
             else:
                 raise ValueError(
-                    f"Don't know the target element column in {result_path_format.format(model_id)}."
+                    f"Don't know the target element column in {result_path_format_use.format(model_id)}."
                 )
             tbl.columns = cols
         tbl = tbl.add_suffix(f"_{model_id}")
@@ -202,15 +210,17 @@ def get_performances(
             "sort_num|z_{}",
             "pos|lfc_rra_{}",
         )
-        + [f"logFC_CB2{sfx}" for sfx in mageck_suffixes],
-        # + [
-        #     f"score_CRISPhieRmix{sfx}" for sfx in mageck_suffixes
-        # ],  # CRISPhieRmix doesn't have z-score output
+        + [f"logFC_CB2{sfx}" for sfx in mageck_suffixes]
+        + [
+            f"score_CRISPhieRmix{sfx}" for sfx in mageck_suffixes
+        ],  # CRISPhieRmix doesn't have z-score output
         "fdr_cols": get_cols("fdr_dec_{}", "sort_num|fdr_{}", "pos|fdr_rra_{}")
-        + [f"fdr_ts_CB2{sfx}" for sfx in mageck_suffixes],
-        # + [f"logfdr_CRISPhieRmix{sfx}" for sfx in mageck_suffixes],
-        "labels": model_ids + mageck_labels + [f"CB2{sfx}" for sfx in mageck_suffixes],
-        # + [f"CRISPhieRmix{sfx}" for sfx in mageck_suffixes],
+        + [f"fdr_ts_CB2{sfx}" for sfx in mageck_suffixes]
+        + [f"FDR_CRISPhieRmix{sfx}" for sfx in mageck_suffixes],
+        "labels": model_ids
+        + mageck_labels
+        + [f"CB2{sfx}" for sfx in mageck_suffixes]
+        + [f"CRISPhieRmix{sfx}" for sfx in mageck_suffixes],
         "pos_idx": pos_idx,
         "ctrl_idx": ctrl_idx,
         "filter_sign": False,
@@ -256,39 +266,43 @@ def main():
     os.makedirs(output_path, exist_ok=True)
     guide_info = pd.read_csv("resources/gRNA_info/LDLRCDS_gRNA_bean.csv", index_col=0)
     bean_result_path_format = f"results/model_runs/bean{args.result_suffix}/bean_run_result.{args.screen_name}/bean_element_result.{{}}.csv"
-    bean_results = get_bean_results(bean_result_path_format)
+    bean_results = get_bean_results(
+        bean_result_path_format, args.compare_with_alleleFiltered
+    )
     all_results = None
     all_mageck_labels = []
     # evaluate performance with splicing variants as positive controls, for common variant of pair of methods.
     for annot_type in ["allEdited", "behive"]:
-        mageck_prefix = f"results/model_runs/mageck{args.result_suffix}/{args.noallele_screen_name}.target_{annot_type}/"
+        mageck_prefix = f"results/model_runs/mageck{args.result_suffix}/{args.screen_name if args.compare_with_alleleFiltered else args.noallele_screen_name}.no_bcmatch.target_{annot_type}/"
         mageck_results, mageck_labels = get_mageck_results(mageck_prefix)
         mageck_labels = [f"{m}_{annot_type}" for m in mageck_labels]
         all_mageck_labels += mageck_labels
-        cb2_prefix = f"results/model_runs/CB2/CB2_run_result.{args.noallele_screen_name}.target_{annot_type}/"
-        criephier_prefix = f"results/model_runs/CRISPhieRmix/CRISPhieRmix_run_result.{args.noallele_screen_name}.target_{annot_type}/"
+        cb2_prefix = f"results/model_runs/CB2/CB2_run_result.{args.screen_name if args.compare_with_alleleFiltered else args.noallele_screen_name}.target_{annot_type}/"
+        crisphiermix_prefix = f"results/model_runs/CRISPhieRmix_negctrl/CRISPhieRmix_run_result.{args.screen_name if args.compare_with_alleleFiltered else args.noallele_screen_name}.target_{annot_type}/"
         cb2_results, cb2_labels = get_cb2_results(cb2_prefix)
-        # crisphiermix_results, crisphiermix_labels = get_crisphiermix_results(
-        #     crisphiermix_prefix
-        # )
-        try:
-            cmp_results = (
-                bean_results.merge(
-                    mageck_results,
-                    on="variant",
-                    how="inner",
-                ).merge(cb2_results, on="variant", how="inner")
-                # .merge(crisphiermix_results, on="variant", how="inner")
+        crisphiermix_results, crisphiermix_labels = get_crisphiermix_results(
+            crisphiermix_prefix
+        )
+        # try:
+        cmp_results = (
+            bean_results.merge(
+                mageck_results,
+                on="variant",
+                how="inner",
             )
-        except:
-            print(
-                bean_results.merge(
-                    mageck_results,
-                    on="variant",
-                    how="inner",
-                ).columns
-            )
-            print(cb2_results.columns)
+            .merge(cb2_results, on="variant", how="inner")
+            .merge(crisphiermix_results, on="variant", how="inner")
+        )
+        # except Exception as e:
+        #     print(e)
+        #     print(
+        #         bean_results.merge(
+        #             mageck_results,
+        #             on="variant",
+        #             how="inner",
+        #         ).columns
+        #     )
+        #     print(crisphiermix_results.columns)
         bean_results_mageck_converted = bean_results
         bean_results_mageck_converted.variant = (
             bean_results_mageck_converted.variant.map(
@@ -302,20 +316,21 @@ def main():
                 .reset_index(),
                 on="variant",
                 how="outer",
-            ).merge(
+            )
+            .merge(
                 cb2_results.set_index("variant")
                 .add_suffix(f"_{annot_type}")
                 .reset_index(),
                 on="variant",
                 how="outer",
             )
-            # .merge(
-            #     crisphiermix_results.set_index("variant")
-            #     .add_suffix(f"_{annot_type}")
-            #     .reset_index(),
-            #     on="variant",
-            #     how="outer",
-            # )
+            .merge(
+                crisphiermix_results.set_index("variant")
+                .add_suffix(f"_{annot_type}")
+                .reset_index(),
+                on="variant",
+                how="outer",
+            )
             if all_results is None
             else all_results.merge(
                 mageck_results.set_index("variant")
@@ -323,20 +338,21 @@ def main():
                 .reset_index(),
                 on="variant",
                 how="outer",
-            ).merge(
+            )
+            .merge(
                 cb2_results.set_index("variant")
                 .add_suffix(f"_{annot_type}")
                 .reset_index(),
                 on="variant",
                 how="outer",
             )
-            # .merge(
-            #     crisphiermix_results.set_index("variant")
-            #     .add_suffix(f"_{annot_type}")
-            #     .reset_index(),
-            #     on="variant",
-            #     how="outer",
-            # )
+            .merge(
+                crisphiermix_results.set_index("variant")
+                .add_suffix(f"_{annot_type}")
+                .reset_index(),
+                on="variant",
+                how="outer",
+            )
         )
         for control in ["negctrl", "syn"]:
             perf_df = get_performances(
