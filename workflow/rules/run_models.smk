@@ -188,7 +188,7 @@ rule run_bean_tiling_negctrl:
     output:
         res="results/model_runs/bean_negctrl/bean_run_result.bean_count_LDLRCDS_annotated{cutoff_suffix}/bean_element_result.MultiMixtureNormal.csv",
     run:
-        shell("bean-run tiling {input.input_h5ad} -o results/model_runs/bean_negctrl --allele-df-key sig_allele_counts_spacer_2_7_A.G_translated_prop0.05_0.1 --splice-site-path {input.splice_site} --control-guide-tag ABE_CONTROL --cuda --fit-negctrl --negctrl-col Region --negctrl-col-value 'ABE control' {params.trailing_args}")
+        shell("bean-run tiling {input.input_h5ad} -o results/model_runs/bean_negctrl --allele-df-key sig_allele_counts_spacer_0_19_A.G_translated_prop0.1_0.3 --splice-site-path {input.splice_site} --control-guide-tag ABE_CONTROL --cuda --fit-negctrl --negctrl-col Region --negctrl-col-value 'ABE control' {params.trailing_args}")
 
 rule run_bean_tiling_negctrl_norm:
     input:
@@ -199,8 +199,8 @@ rule run_bean_tiling_negctrl_norm:
         normal_res_all="results/model_runs/bean_negctrl/bean_run_result.bean_count_LDLRCDS_annotated{cutoff_suffix}/bean_element_result.Normal_allEdited.csv",
         normal_res_pred="results/model_runs/bean_negctrl/bean_run_result.bean_count_LDLRCDS_annotated{cutoff_suffix}/bean_element_result.Normal_behive.csv",
     run:
-        shell("bean-run variant {input.input_h5ad} --perfect-edit -o results/model_runs/bean_negctrl --control-guide-tag ABE_CONTROL --cuda --fit-negctrl --negctrl-col Region --negctrl-col-value 'ABE control' --target-column target_allEdited --result-suffix _allEdited ")
-        shell("bean-run variant {input.input_h5ad} --perfect-edit -o results/model_runs/bean_negctrl --control-guide-tag ABE_CONTROL --cuda --fit-negctrl --negctrl-col Region --negctrl-col-value 'ABE control' --target-col target_behive --result-suffix _behive ")
+        shell("bean-run variant {input.input_h5ad} --perfect-edit -o results/model_runs/bean_negctrl --control-guide-tag ABE_CONTROL --cuda --fit-negctrl --negctrl-col Region --negctrl-col-value 'ABE control' --target-column target_allEdited --result-suffix _allEdited  {params.trailing_args}")
+        shell("bean-run variant {input.input_h5ad} --perfect-edit -o results/model_runs/bean_negctrl --control-guide-tag ABE_CONTROL --cuda --fit-negctrl --negctrl-col Region --negctrl-col-value 'ABE control' --target-col target_behive --result-suffix _behive  {params.trailing_args}")
 
 # rule run_bean_tiling_negctrl_norm_cbe:
 #     input:
@@ -221,7 +221,7 @@ rule run_bean_tiling_acc_negctrl:
     output:
         res="results/model_runs/bean_negctrl/bean_run_result.bean_count_LDLRCDS_annotated{cutoff_suffix}/bean_element_result.MultiMixtureNormal+Acc.csv",
     run:
-        shell("bean-run tiling {input.input_h5ad} --scale-by-acc --acc-bw-path resources/accessibility/ENCFF262URW.hg19.bw -o results/model_runs/bean_negctrl --allele-df-key sig_allele_counts_spacer_2_7_A.G_translated_prop0.05_0.1 --splice-site-path {input.splice_site} --control-guide-tag ABE_CONTROL --cuda --fit-negctrl --negctrl-col Region --negctrl-col-value 'ABE control'")
+        shell("bean-run tiling {input.input_h5ad} --scale-by-acc --acc-bw-path resources/accessibility/ENCFF262URW.hg19.bw -o results/model_runs/bean_negctrl --allele-df-key sig_allele_counts_spacer_0_19_A.G_translated_prop0.1_0.3 --splice-site-path {input.splice_site} --control-guide-tag ABE_CONTROL --cuda --fit-negctrl --negctrl-col Region --negctrl-col-value 'ABE control'  {params.trailing_args}")
 
 rule run_bean_tiling_cbe_negctrl:
     input:

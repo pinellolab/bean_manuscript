@@ -77,7 +77,29 @@ rule map_samples:
         shell('mkdir -p {params.output_dir}')
         map_script = "bean-count-samples --input {input.sample_list} -f {input.guide_info} -o {params.output_dir} -r -t 12 --name {wildcards.lib} --guide-start-seqs-file={input.guide_start_seqs}"
         if wildcards.lib == "LDLvar":
-            map_script += " --match_target_pos"
+            map_script += " --match-target-pos"
+        else:
+            map_script += " --tiling"
+        if wildcards.lib in ["LDLvar", "LDLRCDS"]:
+            map_script += " -b A"
+        else:
+            map_script += " -b C"
+        shell(map_script)
+
+rule map_samples_selfguide:
+    input:
+        guide_info = 'resources/gRNA_info/{lib}_gRNA_bean.csv',
+        sample_list = 'results/raw/{lib}/sample_list.csv',# ?
+        guide_start_seqs = "results/raw/{lib}/guide_start_seqs.txt",
+    params:
+        output_dir = 'results/mapped_guideedits/{lib}/'
+    output:
+        out_h5ad = 'results/mapped_guideedits/{lib}/bean_count_{lib}.h5ad'
+    run:
+        shell('mkdir -p {params.output_dir}')
+        map_script = "bean-count-samples --input {input.sample_list} -f {input.guide_info} -o {params.output_dir} -g -t 12 --name {wildcards.lib} --guide-start-seqs-file={input.guide_start_seqs}"
+        if wildcards.lib == "LDLvar":
+            map_script += " --match-target-pos"
         else:
             map_script += " --tiling"
         if wildcards.lib in ["LDLvar", "LDLRCDS"]:

@@ -14,13 +14,13 @@ rule filter_annotate_cds_alleles:
         input_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_masked.h5ad',
         plasmid_h5ad='results/mapped/LDLRCDS/bean_count_LDLRCDS_plasmid.h5ad'
     params:
-        output_prefix='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.1_0.3'
+        output_prefix='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_spacer0.1_0.3'
     output:
-        output_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.1_0.3.h5ad',
-        output_filter_stats='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.1_0.3.filtered_allele_stats.pdf',
-        output_filter_log='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_0.1_0.3.filter_log.txt',
+        output_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_spacer0.1_0.3.h5ad',
+        output_filter_stats='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_spacer0.1_0.3.filtered_allele_stats.pdf',
+        output_filter_log='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_alleleFiltered_spacer0.1_0.3.filter_log.txt',
     run:
-        shell("bean-filter {input.input_h5ad} -o {params.output_prefix} -p {input.plasmid_h5ad} -s 2 -e 7 -w -b -t -ap 0.1 -sp 0.1")
+        shell("bean-filter {input.input_h5ad} -o {params.output_prefix} -p {input.plasmid_h5ad} -s 0 -e 19 -w -b -t -ap 0.1 -sp 0.3")
 
 rule filter_annotate_cds_alleles_CBE:
     input:
@@ -66,7 +66,7 @@ rule annotate_tiling:
         behive_ctrl_pred='resources/gRNA_info/target_prediction/control_gRNA_BEHive_consequence.csv',
         splice_sites='resources/LDLR/LDLR_ABE_splice_targets.csv'
     wildcard_constraints:
-        cutoff_suffix="_[.\d]+_[.\d]+"
+        cutoff_suffix="[_[a-z]*[.\d]+_[.\d]+]?"
     output:
         output_h5ad='results/filtered_annotated/LDLRCDS/bean_count_LDLRCDS_annotated{cutoff_suffix}.h5ad',
     run:

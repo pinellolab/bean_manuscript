@@ -83,7 +83,7 @@ counts <- counts[rownames(obs), ]
 # select top and bottom samples
 var.top.bot <- subset(var, bin %in% c("top", "bot"))
 counts <- counts[, rownames(var.top.bot)]
-df <- d(counts, var.top.bot, obs)
+df <- get_results(counts, var.top.bot, obs)
 
 write.csv(df, glue::glue("{opt$output}.target_allEdited/CRISPhieRmix.csv"))
 
@@ -111,7 +111,7 @@ colnames(counts_bcmatch) <- paste0("bcmatch_", colnames(counts_bcmatch))
 counts <- cbind(counts, counts_bcmatch)
 var.top.bot <- rbind(var.top.bot, var.top.bot2)
 
-df <- d(counts, var.top.bot, obs)
+df <- get_results(counts, var.top.bot, obs)
 write.csv(df, glue::glue("{opt$output}.target_allEdited/CRISPhieRmix_with_bcmatch.csv"))
 ############################################################################
 
@@ -132,7 +132,7 @@ counts <- counts[rownames(obs), ]
 # select top and bottom samples
 var.top.bot <- subset(var, bin %in% c("top", "bot"))
 counts <- counts[, rownames(var.top.bot)]
-df <- d(counts, var.top.bot, obs, "target_behive")
+df <- get_results(counts, var.top.bot, obs, "target_behive")
 write.csv(df, glue::glue("{opt$output}.target_behive/CRISPhieRmix.csv"))
 
 

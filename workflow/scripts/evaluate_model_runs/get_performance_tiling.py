@@ -49,8 +49,10 @@ def get_bean_results(result_path_format, compare_with_alleleFiltered=False):
     res_tbl = None
     for model_id in model_ids:
         if "Mixture" not in model_id and (not compare_with_alleleFiltered):
-            result_path_format_use = result_path_format.replace("_0.1_0.3", "").replace(
-                "_0.05_0.1", ""
+            result_path_format_use = (
+                result_path_format.replace("_spacer0.1_0.3", "")
+                .replace("_0.1_0.3", "")
+                .replace("_0.05_0.1", "")
             )
         else:
             result_path_format_use = result_path_format

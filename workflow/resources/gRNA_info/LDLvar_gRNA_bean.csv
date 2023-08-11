@@ -1,4 +1,4 @@
-,name,target_variant,Target descriptor,Arbitrary number,gRNA position category,Target base position in gRNA,Target base position in reporter,BE,target_group,sequence,Reporter,barcode,5-nt PAM,offset,target,spacer_target_pos,target_group2
+,name,target_variant,Target descriptor,Arbitrary number,gRNA position category,Target base position in gRNA,target_pos,BE,target_group,sequence,Reporter,barcode,5-nt PAM,offset,target,spacer_target_pos,target_group2
 0,CONTROL_1_g1,CONTROL,,1,g1,4,10,ABE,NegCtrl,CCTACGCGGTAGGGAACTTT,CCAAGCCCTACGCGGTAGGGAACTTTGGGAGC,GTTT,GGGAG,-10,CONTROL_1,9,NegCtrl
 1,CONTROL_1_g2,CONTROL,,1,g2,5,11,ABE,NegCtrl,CCCTACGCGGTAGGGAACTT,TCCAAGCCCTACGCGGTAGGGAACTTTGGGAG,AACA,TGGGA,-11,CONTROL_1,10,NegCtrl
 2,CONTROL_1_g3,CONTROL,,1,g3,5,12,ABE,NegCtrl,CCCTACGCGGTAGGGAACT,GTCCAAGCCCTACGCGGTAGGGAACTTTGGGA,CGCT,TTGGG,-12,CONTROL_1,11,NegCtrl
