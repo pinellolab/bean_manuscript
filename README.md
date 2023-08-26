@@ -1,5 +1,5 @@
-# anbe_manuscript
-Scripts for plots used in manuscript. Follows (WorkflowHub standards)[https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#uploading-workflows-to-workflowhub].
+# bean_manuscript
+Scripts for plots used in manuscript. Adapts (WorkflowHub standards)[https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#uploading-workflows-to-workflowhub].
 ```
 ├── .gitignore
 ├── README.md
