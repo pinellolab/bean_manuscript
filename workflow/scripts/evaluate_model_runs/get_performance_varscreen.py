@@ -48,12 +48,14 @@ def get_bean_results(result_path_format):
         tbl = pd.read_csv(result_path_format.format(model_id))
         if gene_order is None:
             gene_order = tbl["target"]
+        tbl["neg_mu_z"] = -tbl["mu_z"]
         tbl = (
             tbl.set_index("target")
             .reindex(gene_order)
             .reset_index(drop=False)
             .add_suffix(f"_{model_id}")
         )
+
         res_tbls.append(tbl.reset_index())
     return pd.concat(res_tbls, axis=1), gene_order
 
@@ -216,13 +218,13 @@ def main():
         "z_cols": get_cols("mu_z_{}", "sort_num|z_{}_{}", "pos|lfc_rra_{}")
         + ["logFC_CB2"],
         "fdr_inc_cols": get_cols(
-            "fdr_inc_{}",
+            "neg_mu_z_{}",
             "sort_num|fdr_{}_{}",
             "neg|fdr_rra_{}",
         )
         + ["fdr_pa_CB2"],
         "fdr_dec_cols": get_cols(
-            "fdr_dec_{}",
+            "mu_z_{}",
             "sort_num|fdr_{}_{}",
             "pos|fdr_rra_{}",
         )

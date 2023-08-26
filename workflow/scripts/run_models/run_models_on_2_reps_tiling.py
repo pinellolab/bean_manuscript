@@ -29,45 +29,45 @@ def run_models(bdata_paths, provide_negctrl=False):
         )
         procs.append(p)
 
-        mageck_command = [
-            "sh",
-            "scripts/run_models/run_mageck_tiling.sh",
-            bdata_path,
-            f"results/model_runs/mageck{'_negctrl' if provide_negctrl else ''}",
-        ]
-        if provide_negctrl:
-            mageck_command += [
-                "--control-sgrna",
-                f"resources/gRNA_info/LDLRCDS_{'CBE' if 'CBE' in bdata_path else 'ABE'}_negctrl_gRNA.txt",
-            ]
-        p = subprocess.Popen(mageck_command)
-        procs.append(p)
+        # mageck_command = [
+        #     "sh",
+        #     "scripts/run_models/run_mageck_tiling.sh",
+        #     bdata_path,
+        #     f"results/model_runs/mageck{'_negctrl' if provide_negctrl else ''}",
+        # ]
+        # if provide_negctrl:
+        #     mageck_command += [
+        #         "--control-sgrna",
+        #         f"resources/gRNA_info/LDLRCDS_{'CBE' if 'CBE' in bdata_path else 'ABE'}_negctrl_gRNA.txt",
+        #     ]
+        # p = subprocess.Popen(mageck_command)
+        # procs.append(p)
 
-        if provide_negctrl:
-            p = subprocess.Popen(
-                [
-                    "conda",
-                    "run",
-                    "-n",
-                    "anbe_benchmark",
-                    "sh",
-                    "scripts/run_models/run_CRISPhieRmix_tiling_negctrl.sh",
-                    bdata_path,
-                    # f"{'CBE' if 'CBE' in bdata_path else 'ABE'} control",
-                ]
-            )
-        p = subprocess.Popen(
-            [
-                "conda",
-                "run",
-                "-n",
-                "anbe_benchmark",
-                "sh",
-                "scripts/run_models/run_CB2_tiling.sh",
-                bdata_path,
-            ]
-        )
-        procs.append(p)
+        # if provide_negctrl:
+        #     p = subprocess.Popen(
+        #         [
+        #             "conda",
+        #             "run",
+        #             "-n",
+        #             "anbe_benchmark",
+        #             "sh",
+        #             "scripts/run_models/run_CRISPhieRmix_tiling_negctrl.sh",
+        #             bdata_path,
+        #             # f"{'CBE' if 'CBE' in bdata_path else 'ABE'} control",
+        #         ]
+        #     )
+        # p = subprocess.Popen(
+        #     [
+        #         "conda",
+        #         "run",
+        #         "-n",
+        #         "anbe_benchmark",
+        #         "sh",
+        #         "scripts/run_models/run_CB2_tiling.sh",
+        #         bdata_path,
+        #     ]
+        # )
+        # procs.append(p)
     for p in procs:
         p.wait()
 
@@ -81,7 +81,7 @@ def evaluate_model_runs(bdata_paths, used_negctrl=False):
         p = subprocess.Popen(
             [
                 "python",
-                "scripts/evaluate_model_runs/get_performance_tiling.py",
+                "scripts/evaluate_model_runs/collect_scores_tiling.py",
                 sample_id,
                 "--noallele-screen-name",
                 noallele_sample_id,

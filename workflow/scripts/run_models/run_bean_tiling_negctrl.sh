@@ -19,23 +19,29 @@ else
     trail_args3=(  )
 fi
 
+if [ ! -d results/model_runs/bean_negctrl/bean_run_result.$(basename "${bdata_path}" .h5ad)/20230823_archive/ ]; then
+    mkdir -p results/model_runs/bean_negctrl/bean_run_result.$(basename "${bdata_path}" .h5ad)/20230823_archive/
+    mv results/model_runs/bean_negctrl/bean_run_result.$(basename "${bdata_path}" .h5ad)/*.csv results/model_runs/bean_negctrl/bean_run_result.$(basename "${bdata_path}" .h5ad)/20230823_archive/
+    mv results/model_runs/bean_negctrl/bean_run_result.$(basename "${bdata_path}" .h5ad)/*.pkl results/model_runs/bean_negctrl/bean_run_result.$(basename "${bdata_path}" .h5ad)/20230823_archive/
+fi
+
 if [ ! -f results/model_runs/bean_negctrl/bean_run_result.$(basename "${bdata_path}" .h5ad)/bean_element_result.Normal_allEdited.csv ] ; then
-    bean-run variant $bdata_path --perfect-edit -o results/model_runs/bean_negctrl/ --splice-site-path results/model_runs/bean_negctrl/bean_run_result.bean_count_LDLRCDS_annotated/bean_element_result.Normal.csv --target-column target_allEdited --fit-negctrl --negctrl-col Region --result-suffix _allEdited --cuda "${trail_args[@]}" "${trail_args3[@]}" &
+    bean-run variant $bdata_path --uniform-edit -o results/model_runs/bean_negctrl/ --splice-site-path resources/LDLR/LDLR_ABE_splice_targets.csv --target-col target_allEdited --fit-negctrl --negctrl-col Region --result-suffix _allEdited "${trail_args[@]}" "${trail_args3[@]}" &
     pids+=($!)
 fi
 
 if [ ! -f results/model_runs/bean_negctrl/bean_run_result.$(basename "${bdata_path}" .h5ad)/bean_element_result.Normal_behive.csv ] ; then
-    bean-run variant $bdata_path --perfect-edit -o results/model_runs/bean_negctrl/ --splice-site-path results/model_runs/bean_negctrl/bean_run_result.bean_count_LDLRCDS_annotated/bean_element_result.Normal.csv --target-column target_behive --fit-negctrl --negctrl-col Region --result-suffix _behive --cuda "${trail_args[@]}" "${trail_args3[@]}" &
+    bean-run variant $bdata_path --uniform-edit -o results/model_runs/bean_negctrl/ --splice-site-path resources/LDLR/LDLR_ABE_splice_targets.csv --target-col target_behive --fit-negctrl --negctrl-col Region --result-suffix _behive "${trail_args[@]}" "${trail_args3[@]}" &
     pids+=($!)
 fi
 
 if [ ! -f results/model_runs/bean_negctrl/bean_run_result.$(basename "${bdata_path}" .h5ad)/bean_element_result.MultiMixtureNormal.csv ] ; then
-    bean-run tiling $bdata_path -o results/model_runs/bean_negctrl --splice-site-path results/model_runs/bean_negctrl/bean_run_result.bean_count_LDLRCDS_annotated/bean_element_result.MultiMixtureNormal.csv  --fit-negctrl --negctrl-col Region --cuda "${trail_args[@]}" "${trail_args2[@]}" "${trail_args3[@]}" &
+    bean-run tiling $bdata_path -o results/model_runs/bean_negctrl --splice-site-path resources/LDLR/LDLR_ABE_splice_targets.csv  --fit-negctrl --negctrl-col Region "${trail_args[@]}" "${trail_args2[@]}" "${trail_args3[@]}" &
     pids+=($!)
 fi
 
 if [ ! -f results/model_runs/bean_negctrl/bean_run_result.$(basename "${bdata_path}" .h5ad)/bean_element_result.MultiMixtureNormal+Acc.csv ] ; then
-    bean-run tiling $bdata_path --scale-by-acc --acc-bw-path resources/accessibility/ENCFF262URW.hg19.bw -o results/model_runs/bean_negctrl --splice-site-path results/model_runs/bean_negctrl/bean_run_result.bean_count_LDLRCDS_annotated/bean_element_result.MultiMixtureNormal+Acc.csv --fit-negctrl --negctrl-col Region --cuda "${trail_args[@]}" "${trail_args2[@]}" "${trail_args3[@]}" &
+    bean-run tiling $bdata_path --scale-by-acc --acc-bw-path resources/accessibility/ENCFF262URW.hg19.bw -o results/model_runs/bean_negctrl --splice-site-path resources/LDLR/LDLR_ABE_splice_targets.csv --fit-negctrl --negctrl-col Region "${trail_args[@]}" "${trail_args2[@]}" "${trail_args3[@]}" &
     pids+=($!)
 fi
 

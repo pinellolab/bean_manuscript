@@ -136,7 +136,7 @@ rule map_minitiling_guide_reporter:
 
 rule map_minitiling_endo:
     input:
-        expand(['results/raw/minitiling/endo/fastq/HepG2_LDLREndo_{cond}_{rep}'], cond=["SubA_Q5", "SubB_Q5", "SubC_Q5", "SubC_Q5U", "SubD_Q5", "SubD_Q5U"], rep=["rep1", "rep2", "rep3", "WT_Ctrl"])
+        expand(['results/raw/minitiling/endo/demuxed/HepG2_LDLREndo_{cond}_{rep}'], cond=["SubA_Q5", "SubB_Q5", "SubC_Q5", "SubC_Q5U", "SubD_Q5", "SubD_Q5U"], rep=["rep1", "rep2", "rep3", "WT_Ctrl"])
     output:
         expand(['results/mapped/minitiling/endo/CRISPResso_on_HepG2_LDLREndo_{cond}_{rep}'], cond=["SubA_Q5", "SubB_Q5", "SubC_Q5", "SubC_Q5U", "SubD_Q5", "SubD_Q5U"], rep=["rep1", "rep2", "rep3", "WT_Ctrl"])
     run:
