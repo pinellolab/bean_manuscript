@@ -1,4 +1,3 @@
-name: jy_anbe_py38
 channels:
   - pytorch
   - anaconda
