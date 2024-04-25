@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import evaluate as ae
 
-model_ids = ["Normal", "MixtureNormal", "MixtureNormal+Acc"]
+model_ids = ["Normal", "MixtureNormal"]
 mageck_mle_disp_modes = ["sort", "sort_var"]
 mageck_mle_pi_modes = ["", "EM", "EMf"]
 mageck_rra_modes = ["bot"]

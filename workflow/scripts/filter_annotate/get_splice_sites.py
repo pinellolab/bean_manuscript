@@ -1,7 +1,9 @@
+from typing import Tuple
 import argparse
 import re
 import numpy as np
 import pandas as pd
+from bean.annotate.utils import get_splice_positions_from_gene_name
 
 
 def parse_args():
@@ -13,6 +15,11 @@ def parse_args():
     argparser.add_argument(
         "exon_fa_path", help="File path to fasta file with exon position information."
     )
+    argparser.add_argument(
+        "--gene-name",
+        action="store_true",
+        help="File path to fasta file with exon position information.",
+    )
     argparser.add_argument("edited_base", help="Edited base, either A or C.")
     argparser.add_argument(
         "output_path", help="output path of the splice site csv file."
@@ -21,7 +28,7 @@ def parse_args():
     return argparser.parse_args()
 
 
-def get_splice_positions(exon_fa_path):
+def get_splice_positions(exon_fa_path) -> Tuple[str, np.ndarray, np.ndarray]:
     splice_donor_pos = []
     splice_acceptor_pos = []
     p = re.compile("range=chr(\d+):(\d+)-(\d+)")
@@ -29,6 +36,7 @@ def get_splice_positions(exon_fa_path):
         for line in f:
             if line.startswith(">"):
                 result = p.search(line)
+                chrom = result[1]
                 exon_start = int(result[2])
                 exon_end = int(result[3])
                 splice_donor_pos.append(exon_end)
@@ -37,12 +45,15 @@ def get_splice_positions(exon_fa_path):
     splice_acceptor_pos = np.array(splice_acceptor_pos)
     splice_donor_pos = splice_donor_pos[:-1]
     splice_acceptor_pos = splice_acceptor_pos[1:]
-    return splice_donor_pos, splice_acceptor_pos
+    return chrom, splice_donor_pos, splice_acceptor_pos
 
 
 def get_targetable_splice_positions(
-    splice_donor_pos, splice_acceptor_pos, edited_base="A"
-):
+    chrom: str,
+    splice_donor_pos: np.ndarray,
+    splice_acceptor_pos: np.ndarray,
+    edited_base: str = "A",
+) -> pd.DataFrame:
     """
     Splice donor: GT
     Splice acceptor: AG
@@ -59,6 +70,7 @@ def get_targetable_splice_positions(
         splice_site_dfs.extend(
             pd.DataFrame(
                 {
+                    "chrom": chrom,
                     "pos": splice_site_pos + rel_basepos_map[base],
                     "type": label,
                     "target_base": base,
@@ -72,6 +84,11 @@ def get_targetable_splice_positions(
 
 if __name__ == "__main__":
     args = parse_args()
-    sd_pos, sa_pos = get_splice_positions(args.exon_fa_path)
-    splice_target_df = get_targetable_splice_positions(sd_pos, sa_pos, args.edited_base)
+    if args.gene_name is None:
+        chrom, sd_pos, sa_pos = get_splice_positions(args.exon_fa_path)
+    else:
+        chrom, sd_pos, sa_pos = get_splice_positions_from_gene_name(args.exon_fa_path)
+    splice_target_df = get_targetable_splice_positions(
+        chrom, sd_pos, sa_pos, args.edited_base
+    )
     splice_target_df.to_csv(args.output_path)
